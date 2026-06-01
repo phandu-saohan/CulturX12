@@ -1,0 +1,6 @@
+{
+  "name": "CulturX Website and CMS",
+  "description": "Premium human optimization ecosystem website for CulturX, featuring products, clinic bodywork recovery systems, and a built-in CMS panel to manage content, products, and enquiries.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
