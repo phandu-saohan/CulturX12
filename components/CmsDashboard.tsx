@@ -7,7 +7,7 @@ import {
   DollarSign, Calendar, Mail, Laptop, HardDrive, 
   ShoppingBag, Check, ListFilter, PlusCircle, CheckSquare, 
   HelpCircle, Sparkles, BookOpen, Layers, Globe, FileText,
-  LogOut
+  LogOut, Menu
 } from 'lucide-react';
 import { CulturXData, Product, Booking, Enquiry, Order, defaultCulturXData, MedicalArticle, PaymentConfig, defaultPaymentConfig, PaymentMethodSetting, AppSettings } from '@/lib/initialData';
 import OverviewTab from '@/components/cms/tabs/OverviewTab';
@@ -80,6 +80,8 @@ export default function CmsDashboard({
 }: CmsDashboardProps) {
   // Navigation Tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'products' | 'bookings' | 'orders' | 'inbox' | 'system' | 'seo' | 'editorial' | 'settings'>('overview');
+  // Mobile sidebar visibility state
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // SEO Checklist items state backed by localStorage
   const [seoChecklist, setSeoChecklist] = useState<Record<string, boolean>>(() => {
@@ -492,8 +494,106 @@ export default function CmsDashboard({
     }
   };
 
+  // Reusable Sidebar Render Helper
+  const renderSidebar = (isMobileView = false) => {
+    const tabsConfig = [
+      { id: 'overview', label: 'Dashboard Overview', icon: Layers },
+      { id: 'content', label: 'Site Text Editor', icon: FileText },
+      { id: 'products', label: 'Product Inventory', icon: ShoppingBag },
+      { id: 'editorial', label: 'Medical Articles', icon: BookOpen },
+      { id: 'bookings', label: 'Clinical Bookings', icon: Calendar },
+      { id: 'orders', label: 'Customer Orders', icon: CheckSquare },
+      { id: 'inbox', label: 'Client Inbox', icon: Mail },
+      { id: 'seo', label: 'SEO & Google Centric', icon: Globe },
+      { id: 'system', label: 'System Backups', icon: HardDrive },
+      { id: 'settings', label: 'App Settings', icon: Settings },
+    ];
+
+    return (
+      <div className="flex flex-col h-full bg-slate-900 text-white">
+        {/* BRAND HEADER */}
+        <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-indigo-650 rounded-lg flex items-center justify-center font-bold text-white shadow-md shadow-indigo-500/20 shrink-0">
+              <Settings className="w-4.5 h-4.5 animate-spin-slow" />
+            </div>
+            <div>
+              <h2 className="text-sm font-black tracking-widest font-display text-white uppercase leading-none">CULTURX™</h2>
+              <p className="text-[9px] text-slate-400 uppercase font-bold tracking-widest leading-none mt-1">CMS Core</p>
+            </div>
+          </div>
+          {isMobileView && (
+            <button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* WORKSPACE MODULES NAVIGATION */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-1.5 scrollbar-thin">
+          <h3 className="text-[9px] font-bold text-slate-500 uppercase tracking-widest px-2 mb-2">Workspace Modules</h3>
+          <nav className="space-y-1">
+            {tabsConfig.map((tab) => {
+              const TabIcon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as any);
+                    if (isMobileView) {
+                      setIsMobileSidebarOpen(false);
+                    }
+                  }}
+                  className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center justify-between cursor-pointer ${
+                    isActive 
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20' 
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <TabIcon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <span>{tab.label}</span>
+                  </div>
+                  {tab.id === 'bookings' && activeBookingsCount > 0 && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${isActive ? 'bg-black/35 text-indigo-455' : 'bg-indigo-500/20 text-indigo-300'}`}>
+                      {activeBookingsCount}
+                    </span>
+                  )}
+                  {tab.id === 'inbox' && unreadEnquiriesCount > 0 && (
+                    <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-md font-mono font-bold animate-pulse">
+                      {unreadEnquiriesCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* CONNECTION & SYSTEM HEALTH DIAGNOSTIC */}
+        <div className="p-4 border-t border-slate-800 shrink-0">
+          <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 text-center space-y-2">
+            <span className="text-[8px] text-[#aa8612] font-mono font-bold tracking-widest block uppercase">DATABASE CONNECTION DIAGNOSTIC</span>
+            <div className="flex items-center justify-center space-x-1.5 text-[10px] text-green-400 font-bold uppercase tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+              <span>Supabase Cloud Active</span>
+            </div>
+            <p className="text-[9px] text-slate-500 leading-normal font-sans">
+              State synchronized securely with Supabase platform and backup caching enabled for instant response.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-955 flex flex-col font-sans">
+    <div className="h-screen w-screen bg-slate-50 text-slate-900 flex overflow-hidden font-sans">
       
       {/* SUCCESS TOAST NOTIFIER */}
       <div className="fixed top-6 right-6 z-50">
@@ -505,225 +605,205 @@ export default function CmsDashboard({
         )}
       </div>
 
-      {/* HEADER HUD */}
-      <header className="bg-white border-b border-slate-200 p-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 shadow-sm shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-white shadow-md shadow-indigo-200">
-            <Settings className="w-5 h-5 animate-spin-slow" />
-          </div>
-          <div>
-            <h1 className="text-lg font-black tracking-widest font-display text-slate-900 uppercase">CULTURX™ <span className="text-indigo-600">CMS Core</span></h1>
-            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Enterprise Human Performance Database & Content Module</p>
+      {/* MOBILE DRAWER */}
+      {isMobileSidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity duration-300"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+          {/* Drawer content */}
+          <div className="relative flex flex-col w-64 max-w-xs bg-slate-900 h-full text-white shadow-2xl transition-transform duration-300">
+            {renderSidebar(true)}
           </div>
         </div>
+      )}
 
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={toggleLiveSite}
-            className="flex items-center space-x-2 px-5 py-2.5 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs font-bold uppercase cursor-pointer hover:bg-slate-800 transition shadow-sm"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-indigo-450" />
-            <span>👁️ Visit Live Site</span>
-          </button>
-          {onLogout && (
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden lg:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-white shrink-0">
+        {renderSidebar(false)}
+      </aside>
+
+      {/* MAIN CONTAINER */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50">
+        {/* TOP NAVBAR */}
+        <header className="bg-white border-b border-slate-200 h-16 px-6 flex items-center justify-between shadow-sm shrink-0">
+          <div className="flex items-center space-x-3">
             <button
-              onClick={onLogout}
-              className="flex items-center justify-center p-3 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition border border-red-200"
-              aria-label="Logout"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden cursor-pointer"
+              aria-label="Open sidebar"
             >
-              <LogOut className="w-4 h-4" />
+              <Menu className="w-5 h-5" />
             </button>
-          )}
-        </div>
-      </header>
-
-      {/* ADMIN WORKSPACE LAYOUT */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Navigation panel */}
-        <aside className="lg:col-span-3 space-y-3">
-          <div className="bg-slate-900 p-4 border border-slate-800 rounded-2xl shadow-xl">
-            <h3 className="text-xs font-bold text-slate-405 uppercase tracking-widest mb-3">Workspace Modules</h3>
-            
-            <nav className="flex flex-col space-y-1">
-              {[
-                { id: 'overview', label: '📊 Dashboard Overview' },
-                { id: 'content', label: '📝 Site Text Editor' },
-                { id: 'products', label: '📦 Product Inventory' },
-                { id: 'editorial', label: '✍️ Medical Articles' },
-                { id: 'bookings', label: '💆 Clinical Bookings' },
-                { id: 'orders', label: '🛒 Customer Orders' },
-                { id: 'inbox', label: '📥 Client Inbox' },
-                { id: 'seo', label: '🔍 SEO & Google Centric' },
-                { id: 'system', label: '⚙️ System Backups' },
-                { id: 'settings', label: '🎛️ App Settings' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center justify-between ${
-                    activeTab === tab.id 
-                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20' 
-                      : 'text-slate-400 hover:bg-slate-850 hover:text-white'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  {tab.id === 'bookings' && activeBookingsCount > 0 && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${activeTab === 'bookings' ? 'bg-black text-indigo-400' : 'bg-indigo-500/20 text-indigo-300'}`}>
-                      {activeBookingsCount}
-                    </span>
-                  )}
-                  {tab.id === 'inbox' && unreadEnquiriesCount > 0 && (
-                    <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-md animate-pulse">
-                      {unreadEnquiriesCount}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
-          </div>
-
-          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 text-center space-y-2 text-white shadow-xl">
-            <span className="text-[9px] text-[#aa8612] font-mono font-bold tracking-widest block uppercase">DATABASE CONNECTION DIAGNOSTIC</span>
-            <div className="flex items-center justify-center space-x-1.5 text-xs text-green-400 font-semibold uppercase">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
-              <span>Supabase Cloud Active</span>
+            <div className="hidden sm:block">
+              <h1 className="text-sm font-black tracking-widest font-display text-slate-900 uppercase">
+                {activeTab === 'overview' && '📊 Dashboard Overview'}
+                {activeTab === 'content' && '📝 Site Text Editor'}
+                {activeTab === 'products' && '📦 Product Inventory'}
+                {activeTab === 'editorial' && '✍️ Medical Articles'}
+                {activeTab === 'bookings' && '💆 Clinical Bookings'}
+                {activeTab === 'orders' && '🛒 Customer Orders'}
+                {activeTab === 'inbox' && '📥 Client Inbox'}
+                {activeTab === 'seo' && '🔍 SEO & Google Centric'}
+                {activeTab === 'system' && '⚙️ System Backups'}
+                {activeTab === 'settings' && '🎛️ App Settings'}
+              </h1>
             </div>
-            <p className="text-[10px] text-slate-400 leading-normal">
-              State synchronized securely with Supabase platform and backup caching enabled for instant client response.
-            </p>
+            <div className="sm:hidden text-xs font-bold text-slate-900 uppercase tracking-widest">
+              CULTURX CMS
+            </div>
           </div>
-        </aside>
 
-        {/* Primary Tab content panel */}
-        <main className="lg:col-span-9 bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm min-h-[500px]">
-          
-          {/* TAB 1: OVERVIEW METRIC SUMMARY */}
-          {activeTab === 'overview' && (
-            <OverviewTab
-              siteData={siteData}
-              bookings={bookings}
-              enquiries={enquiries}
-              orders={orders}
-              activeBookingsCount={activeBookingsCount}
-              unreadEnquiriesCount={unreadEnquiriesCount}
-            />
-          )}
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={toggleLiveSite}
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-xs font-bold uppercase cursor-pointer hover:bg-slate-800 transition shadow-sm"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">👁️ Visit Live Site</span>
+              <span className="sm:hidden">👁️ Live Site</span>
+            </button>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="flex items-center justify-center p-2.5 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition border border-red-200 cursor-pointer"
+                aria-label="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </header>
 
-          {/* TAB 2: GENERAL TEXT CONTENT EDITORS */}
-          {activeTab === 'content' && (
-            <ContentTab 
-              siteData={siteData} 
-              onSaveSiteData={onSaveSiteData} 
-              showToast={showToast} 
-            />
-          )}
+        {/* WORKSPACE AREA */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="max-w-7xl mx-auto bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm min-h-[500px]">
+            {/* TAB 1: OVERVIEW METRIC SUMMARY */}
+            {activeTab === 'overview' && (
+              <OverviewTab
+                siteData={siteData}
+                bookings={bookings}
+                enquiries={enquiries}
+                orders={orders}
+                activeBookingsCount={activeBookingsCount}
+                unreadEnquiriesCount={unreadEnquiriesCount}
+              />
+            )}
 
-           {activeTab === 'products' && (
-            <ProductsTab
-              siteData={siteData}
-              handleOpenProductModal={handleOpenProductModal}
-              onDeleteProduct={onDeleteProduct}
-              showToast={showToast}
-              productModalOpen={productModalOpen}
-              setProductModalOpen={setProductModalOpen}
-              editingProduct={editingProduct}
-              productForm={productForm}
-              setProductForm={setProductForm}
-              handleProductFormSubmit={handleProductFormSubmit}
-              isDragActive={isDragActive}
-              handleDragOver={handleDragOver}
-              handleDragLeave={handleDragLeave}
-              handleDrop={handleDrop}
-              handleImageFileChange={handleImageFileChange}
-              onViewProductSeo={setSelectedProductSeo}
-            />
-          )}
+            {/* TAB 2: GENERAL TEXT CONTENT EDITORS */}
+            {activeTab === 'content' && (
+              <ContentTab 
+                siteData={siteData} 
+                onSaveSiteData={onSaveSiteData} 
+                showToast={showToast} 
+              />
+            )}
 
-          {/* TAB 3.5: MEDICAL ARTICLE CRUD MANAGEMENT */}
-          {activeTab === 'editorial' && (
-            <EditorialTab
-              articles={articles}
-              handleOpenArticleModal={handleOpenArticleModal}
-              onDeleteArticle={onDeleteArticle}
-              showToast={showToast}
-              articleModalOpen={articleModalOpen}
-              setArticleModalOpen={setArticleModalOpen}
-              editingArticle={editingArticle}
-              articleForm={articleForm}
-              setArticleForm={setArticleForm}
-              handleArticleFormSubmit={handleArticleFormSubmit}
-            />
-          )}
+            {activeTab === 'products' && (
+              <ProductsTab
+                siteData={siteData}
+                handleOpenProductModal={handleOpenProductModal}
+                onDeleteProduct={onDeleteProduct}
+                showToast={showToast}
+                productModalOpen={productModalOpen}
+                setProductModalOpen={setProductModalOpen}
+                editingProduct={editingProduct}
+                productForm={productForm}
+                setProductForm={setProductForm}
+                handleProductFormSubmit={handleProductFormSubmit}
+                isDragActive={isDragActive}
+                handleDragOver={handleDragOver}
+                handleDragLeave={handleDragLeave}
+                handleDrop={handleDrop}
+                handleImageFileChange={handleImageFileChange}
+                onViewProductSeo={setSelectedProductSeo}
+              />
+            )}
 
-          {/* TAB 4: CLINICAL BOOKING MANAGER */}
-          {/* TAB 4: THERAPIST BOOKINGS */}
-          {activeTab === 'bookings' && (
-            <BookingsTab
-              bookings={bookings}
-              onUpdateBookingStatus={onUpdateBookingStatus}
-              onDeleteBooking={onDeleteBooking}
-              showToast={showToast}
-            />
-          )}
+            {/* TAB 3.5: MEDICAL ARTICLE CRUD MANAGEMENT */}
+            {activeTab === 'editorial' && (
+              <EditorialTab
+                articles={articles}
+                handleOpenArticleModal={handleOpenArticleModal}
+                onDeleteArticle={onDeleteArticle}
+                showToast={showToast}
+                articleModalOpen={articleModalOpen}
+                setArticleModalOpen={setArticleModalOpen}
+                editingArticle={editingArticle}
+                articleForm={articleForm}
+                setArticleForm={setArticleForm}
+                handleArticleFormSubmit={handleArticleFormSubmit}
+              />
+            )}
 
-          {/* TAB 5: ACTIVE CUSTOMER ORDERS */}
-          {activeTab === 'orders' && (
-            <OrdersTab
-              orders={orders}
-              onUpdateOrderStatus={onUpdateOrderStatus}
-              onDeleteOrder={onDeleteOrder}
-              showToast={showToast}
-            />
-          )}
+            {/* TAB 4: CLINICAL BOOKING MANAGER */}
+            {activeTab === 'bookings' && (
+              <BookingsTab
+                bookings={bookings}
+                onUpdateBookingStatus={onUpdateBookingStatus}
+                onDeleteBooking={onDeleteBooking}
+                showToast={showToast}
+              />
+            )}
 
-          {/* TAB 6: CLIENT ENQUIRIES MAILBOX */}
-          {activeTab === 'inbox' && (
-            <InboxTab
-              enquiries={enquiries}
-              onUpdateEnquiryStatus={onUpdateEnquiryStatus}
-              onDeleteEnquiry={onDeleteEnquiry}
-              showToast={showToast}
-            />
-          )}
+            {/* TAB 5: ACTIVE CUSTOMER ORDERS */}
+            {activeTab === 'orders' && (
+              <OrdersTab
+                orders={orders}
+                onUpdateOrderStatus={onUpdateOrderStatus}
+                onDeleteOrder={onDeleteOrder}
+                showToast={showToast}
+              />
+            )}
 
-          {/* TAB 8: SEO & GOOGLE SETUP CHECKLIST CONTROL PANEL */}
-          {/* TAB 8: SEO & GOOGLE SETUP CHECKLIST CONTROL PANEL */}
-          {activeTab === 'seo' && (
-            <SeoTab
-              siteData={siteData}
-              seoChecklist={seoChecklist}
-              toggleSeoCheck={toggleSeoCheck}
-              seoPages={seoPages}
-              handleUpdatePageSeo={handleUpdatePageSeo}
-              showToast={showToast}
-            />
-          )}
+            {/* TAB 6: CLIENT ENQUIRIES MAILBOX */}
+            {activeTab === 'inbox' && (
+              <InboxTab
+                enquiries={enquiries}
+                onUpdateEnquiryStatus={onUpdateEnquiryStatus}
+                onDeleteEnquiry={onDeleteEnquiry}
+                showToast={showToast}
+              />
+            )}
 
-          {/* TAB 7: DATABASE SYSTEM ACTIONS & FILE RESTORE */}
-          {activeTab === 'system' && (
-            <SystemTab
-              handleExportData={handleExportData}
-              handleImportData={handleImportData}
-              backupJsonText={backupJsonText}
-              setBackupJsonText={setBackupJsonText}
-              paymentConfig={paymentConfig}
-              handleTogglePaymentMethod={handleTogglePaymentMethod}
-              handleUpdatePaymentDetails={handleUpdatePaymentDetails}
-              onResetToDefaults={onResetToDefaults}
-              showToast={showToast}
-            />
-          )}
+            {/* TAB 8: SEO & GOOGLE SETUP CHECKLIST CONTROL PANEL */}
+            {activeTab === 'seo' && (
+              <SeoTab
+                siteData={siteData}
+                seoChecklist={seoChecklist}
+                toggleSeoCheck={toggleSeoCheck}
+                seoPages={seoPages}
+                handleUpdatePageSeo={handleUpdatePageSeo}
+                showToast={showToast}
+              />
+            )}
 
-          {/* TAB 10: APP SETTINGS */}
-          {activeTab === 'settings' && (
-            <SettingsTab
-              appSettings={appSettings}
-              onSaveAppSettings={onSaveAppSettings}
-              showToast={showToast}
-            />
-          )}
+            {/* TAB 7: DATABASE SYSTEM ACTIONS & FILE RESTORE */}
+            {activeTab === 'system' && (
+              <SystemTab
+                handleExportData={handleExportData}
+                handleImportData={handleImportData}
+                backupJsonText={backupJsonText}
+                setBackupJsonText={setBackupJsonText}
+                paymentConfig={paymentConfig}
+                handleTogglePaymentMethod={handleTogglePaymentMethod}
+                handleUpdatePaymentDetails={handleUpdatePaymentDetails}
+                onResetToDefaults={onResetToDefaults}
+                showToast={showToast}
+              />
+            )}
 
+            {/* TAB 10: APP SETTINGS */}
+            {activeTab === 'settings' && (
+              <SettingsTab
+                appSettings={appSettings}
+                onSaveAppSettings={onSaveAppSettings}
+                showToast={showToast}
+              />
+            )}
+          </div>
         </main>
       </div>
 
