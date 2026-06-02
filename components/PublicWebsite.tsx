@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Menu, X, ShoppingBag, Calendar, Mail, Phone, MapPin, 
-  ChevronRight, Check, CheckCircle, Info, ShoppingCart, 
+  ChevronRight, Check, CheckCircle, Info, ShoppingCart, Share2, Copy, Facebook, Twitter, Send,
   Trash2, Landmark, ShieldCheck, HeartPulse, Search, BookOpen, Clock, User, ExternalLink, Activity, CreditCard, Wallet
 } from 'lucide-react';
 import { CulturXData, Product, Booking, Enquiry, Order, OrderItem, MedicalArticle, PaymentConfig, AppSettings, defaultAppSettings } from '@/lib/initialData';
@@ -95,6 +95,7 @@ export default function PublicWebsite({
   const [selectedArticleToRead, setSelectedArticleToRead] = useState<MedicalArticle | null>(null);
   const [selectedProductSeo, setSelectedProductSeo] = useState<Product | null>(null);
   const [successTxId, setSuccessTxId] = useState<string>('');
+  const [shareProductId, setShareProductId] = useState<string | null>(null);
   const [successSummary, setSuccessSummary] = useState<{ total: number; items: OrderItem[] }>({ total: 0, items: [] });
 
   // Australian payment methods & compliance policies states
@@ -174,6 +175,43 @@ export default function PublicWebsite({
 
   // activePolicyModal state stays local — only used in FooterSection
   const [activePolicyModal, setActivePolicyModal] = useState<'accessibility' | 'disclaimer' | 'privacy' | 'refund' | 'terms' | null>(null);
+
+  // Share product helper
+  const handleShareProduct = (platform: string, prod: Product) => {
+    const shareUrl = `${window.location.origin}/?product=${prod.sku.toLowerCase()}`;
+    const shareText = `Check out ${prod.name} on CulturX!`;
+    
+    if (platform === 'copy') {
+      navigator.clipboard.writeText(shareUrl);
+      alert(`Copied link to clipboard: ${shareUrl}`);
+    } else if (platform === 'facebook') {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+    } else if (platform === 'twitter') {
+      window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (platform === 'telegram') {
+      window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+    }
+    setShareProductId(null);
+  };
+
+  const triggerNativeShare = async (prod: Product) => {
+    const shareUrl = `${window.location.origin}/?product=${prod.sku.toLowerCase()}`;
+    const shareText = `Check out ${prod.name} on CulturX!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: prod.name,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        console.log("Native share cancelled or failed, falling back", err);
+      }
+    }
+    setShareProductId(shareProductId === prod.id ? null : prod.id);
+  };
 
   // Add to cart helper
   const addToCart = (product: Product) => {
@@ -1532,13 +1570,53 @@ export default function PublicWebsite({
                         Add to Cart
                       </button>
                     )}
-                    <button
-                      onClick={() => setSelectedProductSeo(prod)}
-                      title="SEO Analytics"
-                      className="p-2.5 rounded-xl border border-neutral-800 hover:border-brand-gold/40 text-zinc-600 hover:text-brand-gold transition cursor-pointer"
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => triggerNativeShare(prod)}
+                        title="Share Product"
+                        className="p-2.5 rounded-xl border border-neutral-800 hover:border-brand-gold/40 text-zinc-400 hover:text-brand-gold transition cursor-pointer flex items-center justify-center bg-neutral-900"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {shareProductId === prod.id && (
+                        <div className="absolute right-0 bottom-full mb-2 z-[60] bg-neutral-900 border border-neutral-800 p-2.5 rounded-xl shadow-2xl flex flex-col gap-1.5 w-40 animate-fadeIn">
+                          <button
+                            type="button"
+                            onClick={() => handleShareProduct('copy', prod)}
+                            className="w-full text-left text-[10.5px] font-bold text-zinc-300 hover:text-white px-2 py-1.5 rounded-lg hover:bg-neutral-800 transition flex items-center gap-2"
+                          >
+                            <Copy className="w-3 h-3 text-brand-gold" />
+                            <span>Copy Link</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleShareProduct('facebook', prod)}
+                            className="w-full text-left text-[10.5px] font-bold text-zinc-300 hover:text-white px-2 py-1.5 rounded-lg hover:bg-neutral-800 transition flex items-center gap-2"
+                          >
+                            <Facebook className="w-3 h-3 text-indigo-400" />
+                            <span>Facebook</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleShareProduct('twitter', prod)}
+                            className="w-full text-left text-[10.5px] font-bold text-zinc-300 hover:text-white px-2 py-1.5 rounded-lg hover:bg-neutral-800 transition flex items-center gap-2"
+                          >
+                            <Twitter className="w-3 h-3 text-sky-400" />
+                            <span>Twitter / X</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleShareProduct('telegram', prod)}
+                            className="w-full text-left text-[10.5px] font-bold text-zinc-300 hover:text-white px-2 py-1.5 rounded-lg hover:bg-neutral-800 transition flex items-center gap-2"
+                          >
+                            <Send className="w-3 h-3 text-cyan-400" />
+                            <span>Telegram</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
