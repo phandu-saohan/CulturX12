@@ -200,7 +200,7 @@ export default function ProductsTab({
                   value={productForm.description}
                   onChange={e => setProductForm({ ...productForm, description: e.target.value })}
                   placeholder="Precision-fermented kombucha elixirs for microbiome protection."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-850 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed" 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-base text-slate-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed" 
                 />
               </div>
 

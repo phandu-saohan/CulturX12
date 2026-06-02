@@ -172,7 +172,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
               <label>Hero detailed body introduction</label>
               <span className="text-slate-400 font-mono text-[9px]">{editedHero.description.length} chars</span>
             </div>
-            <textarea rows={5} value={editedHero.description} onChange={e => setEditedHero({ ...editedHero, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs transition duration-150" />
+            <textarea rows={5} value={editedHero.description} onChange={e => setEditedHero({ ...editedHero, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-base text-slate-900 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs transition duration-150" />
           </div>
         </div>
       </div>
@@ -200,7 +200,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
                 <label>Description claim paragraph</label>
                 <span className="text-slate-400 font-mono text-[9px]">{editedBlackSystem.description.length} chars</span>
               </div>
-              <textarea rows={4} value={editedBlackSystem.description} onChange={e => setEditedBlackSystem({ ...editedBlackSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
+              <textarea rows={4} value={editedBlackSystem.description} onChange={e => setEditedBlackSystem({ ...editedBlackSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-base text-slate-900 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
             </div>
             <div>
               <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Pills (comma-separated list)</label>
@@ -223,7 +223,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
                 <label>Description claim paragraph</label>
                 <span className="text-slate-400 font-mono text-[9px]">{editedWhiteSystem.description.length} chars</span>
               </div>
-              <textarea rows={4} value={editedWhiteSystem.description} onChange={e => setEditedWhiteSystem({ ...editedWhiteSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
+              <textarea rows={4} value={editedWhiteSystem.description} onChange={e => setEditedWhiteSystem({ ...editedWhiteSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-base text-slate-900 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
             </div>
             <div>
               <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Pills (comma-separated list)</label>
@@ -256,7 +256,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
                 {editedManifesto.terms.length} terms loaded
               </span>
             </div>
-            <textarea rows={8} value={editedManifesto.terms.join('\n')} onChange={e => setEditedManifesto({ ...editedManifesto, terms: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
+            <textarea rows={8} value={editedManifesto.terms.join('\n')} onChange={e => setEditedManifesto({ ...editedManifesto, terms: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-sm text-slate-900 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
           </div>
         </div>
       </div>
@@ -311,7 +311,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
                     const newItems = [...editedEcosystem.items];
                     newItems[idx] = { ...item, description: e.target.value };
                     setEditedEcosystem({ ...editedEcosystem, items: newItems });
-                  }} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed" />
+                  }} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-base text-slate-900 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed" />
                 </div>
               </div>
             ))}
@@ -344,7 +344,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
               <label>Key explanatory paragraph</label>
               <span className="text-slate-400 font-mono text-[9px]">{editedBodyworks.paragraph.length} chars</span>
             </div>
-            <textarea rows={5} value={editedBodyworks.paragraph} onChange={e => setEditedBodyworks({ ...editedBodyworks, paragraph: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-450 leading-relaxed shadow-2xs" />
+            <textarea rows={5} value={editedBodyworks.paragraph} onChange={e => setEditedBodyworks({ ...editedBodyworks, paragraph: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-base text-slate-900 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-450 leading-relaxed shadow-2xs" />
           </div>
           <div>
             <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Required state call (e.g. Not indulgence. Required recovery.)</label>
@@ -361,7 +361,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
                 {editedBodyworks.cardTexts.length} statements loaded
               </span>
             </div>
-            <textarea rows={6} value={editedBodyworks.cardTexts.join('\n')} onChange={e => setEditedBodyworks({ ...editedBodyworks, cardTexts: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 leading-relaxed shadow-2xs" />
+            <textarea rows={6} value={editedBodyworks.cardTexts.join('\n')} onChange={e => setEditedBodyworks({ ...editedBodyworks, cardTexts: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-sm text-slate-900 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 leading-relaxed shadow-2xs" />
           </div>
         </div>
       </div>
@@ -387,7 +387,7 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
               <label>Central explanations text</label>
               <span className="text-slate-400 font-mono text-[9px]">{editedExhale.explanation.length} chars</span>
             </div>
-            <textarea rows={4} value={editedExhale.explanation} onChange={e => setEditedExhale({ ...editedExhale, explanation: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-855 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
+            <textarea rows={4} value={editedExhale.explanation} onChange={e => setEditedExhale({ ...editedExhale, explanation: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-base text-slate-900 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
           </div>
         </div>
       </div>

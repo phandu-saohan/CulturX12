@@ -1,7 +1,12 @@
 'use client';
-import React from 'react';
-import { CheckSquare, HelpCircle, Sparkles, Globe, FileText, Layers, Settings, BookOpen, PlusCircle } from 'lucide-react';
-import { CulturXData } from '@/lib/initialData';
+
+import React, { useState } from 'react';
+import { 
+  CheckSquare, HelpCircle, Sparkles, Globe, FileText, 
+  Layers, Settings, BookOpen, PlusCircle, CheckCircle2, 
+  AlertTriangle, X, Play, RefreshCw, Info, Check, ShieldAlert
+} from 'lucide-react';
+import { CulturXData, AppSettings } from '@/lib/initialData';
 
 type PageSeo = { title: string; description: string; canonicalUrl: string; };
 
@@ -12,63 +17,261 @@ interface SeoTabProps {
   seoPages: Record<'home' | 'shop' | 'articles', PageSeo>;
   handleUpdatePageSeo: (pageKey: 'home' | 'shop' | 'articles', field: keyof PageSeo, value: string) => void;
   showToast: (msg: string) => void;
+  appSettings: AppSettings;
 }
 
-export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPages, handleUpdatePageSeo, showToast }: SeoTabProps) {
+export default function SeoTab({ 
+  siteData, 
+  seoChecklist, 
+  toggleSeoCheck, 
+  seoPages, 
+  handleUpdatePageSeo, 
+  showToast,
+  appSettings 
+}: SeoTabProps) {
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [auditLoading, setAuditLoading] = useState(false);
+
+  // Compute checklist coverage (integrating hardcoded toggle states + live connection checks)
+  const isGa4Connected = !!appSettings.integrations?.googleAnalyticsId;
+  const isGscConnected = !!appSettings.integrations?.googleSearchConsoleId;
+  
+  const totalBaseItems = Object.keys(seoChecklist).length;
+  const checkedBaseItems = Object.entries(seoChecklist).filter(([key, val]) => {
+    // Override connections based on actual appSettings
+    if (key === 'ga4') return isGa4Connected;
+    if (key === 'searchConsole') return isGscConnected;
+    if (key === 'sitemap') return true; // Dynamic sitemap is always ready
+    return val;
+  }).length;
+
+  const seoPercentage = Math.round((checkedBaseItems / totalBaseItems) * 100);
+
+  // Run SEO audit routine
+  const handleRunAudit = () => {
+    setAuditLoading(true);
+    setTimeout(() => {
+      setAuditLoading(false);
+      setAuditOpen(true);
+      showToast("Live SEO & index crawl simulation complete.");
+    }, 1200);
+  };
+
+  // Compute live audit statistics
+  const getAuditReport = () => {
+    let score = 100;
+    const items: Array<{
+      id: string;
+      title: string;
+      status: 'pass' | 'warning' | 'error';
+      message: string;
+      scoreImpact: number;
+    }> = [];
+
+    // Title lengths
+    const homeTitleLen = seoPages.home.title.length;
+    if (homeTitleLen < 40 || homeTitleLen > 60) {
+      score -= 5;
+      items.push({
+        id: 'home-title',
+        title: 'Home Page Title Tag Length',
+        status: 'warning',
+        message: `Currently ${homeTitleLen} characters. Target is 40–60 characters to optimize Google SERP snippet formatting.`,
+        scoreImpact: -5
+      });
+    } else {
+      items.push({
+        id: 'home-title',
+        title: 'Home Page Title Tag Length',
+        status: 'pass',
+        message: `Currently ${homeTitleLen} characters. Perfect range (40–60).`,
+        scoreImpact: 0
+      });
+    }
+
+    const shopTitleLen = seoPages.shop.title.length;
+    if (shopTitleLen < 40 || shopTitleLen > 60) {
+      score -= 5;
+      items.push({
+        id: 'shop-title',
+        title: 'Shop Page Title Tag Length',
+        status: 'warning',
+        message: `Currently ${shopTitleLen} characters. Optimal title is 40–60 characters.`,
+        scoreImpact: -5
+      });
+    } else {
+      items.push({
+        id: 'shop-title',
+        title: 'Shop Page Title Tag',
+        status: 'pass',
+        message: `Currently ${shopTitleLen} characters. Perfect range.`,
+        scoreImpact: 0
+      });
+    }
+
+    // Description lengths
+    const homeDescLen = seoPages.home.description.length;
+    if (homeDescLen < 120 || homeDescLen > 160) {
+      score -= 5;
+      items.push({
+        id: 'home-desc',
+        title: 'Home Page Meta Description',
+        status: 'warning',
+        message: `Currently ${homeDescLen} characters. Recommended range is 120–160 characters to prevent search summary truncation.`,
+        scoreImpact: -5
+      });
+    } else {
+      items.push({
+        id: 'home-desc',
+        title: 'Home Page Meta Description',
+        status: 'pass',
+        message: `Currently ${homeDescLen} characters. Optimal description size.`,
+        scoreImpact: 0
+      });
+    }
+
+    // Google connections
+    if (!isGa4Connected) {
+      score -= 15;
+      items.push({
+        id: 'ga4-connection',
+        title: 'Google Analytics 4 Pipeline',
+        status: 'error',
+        message: 'No measurement tracking ID configured. Analytics dashboard cannot compile client conversion indicators.',
+        scoreImpact: -15
+      });
+    } else {
+      items.push({
+        id: 'ga4-connection',
+        title: 'Google Analytics 4 Pipeline',
+        status: 'pass',
+        message: `Active measurement endpoint configured (${appSettings.integrations.googleAnalyticsId}).`,
+        scoreImpact: 0
+      });
+    }
+
+    if (!isGscConnected) {
+      score -= 15;
+      items.push({
+        id: 'gsc-connection',
+        title: 'Google Search Console Verification',
+        status: 'error',
+        message: 'No Search Console verification ID. Crawler bots will not prioritize indexing web URLs.',
+        scoreImpact: -15
+      });
+    } else {
+      items.push({
+        id: 'gsc-connection',
+        title: 'Google Search Console Verification',
+        status: 'pass',
+        message: `Verification key active (${appSettings.integrations.googleSearchConsoleId}).`,
+        scoreImpact: 0
+      });
+    }
+
+    // Local Targeting (Melbourne target)
+    const targetCity = appSettings.localization?.targetCity || '';
+    const targetRegion = appSettings.localization?.targetRegion || '';
+    if (targetCity.toLowerCase() !== 'melbourne' || targetRegion.toLowerCase() !== 'victoria') {
+      score -= 10;
+      items.push({
+        id: 'local-seo',
+        title: 'Local SEO Geolocation Target',
+        status: 'warning',
+        message: `Targeting set to "${targetCity || 'None'}, ${targetRegion || 'None'}". Recommended setting is "Melbourne, Victoria" for maximum localized biohacking ranking.`,
+        scoreImpact: -10
+      });
+    } else {
+      items.push({
+        id: 'local-seo',
+        title: 'Local SEO Geolocation Target',
+        status: 'pass',
+        message: 'Local targeting correctly prioritized for Melbourne, Victoria.',
+        scoreImpact: 0
+      });
+    }
+
+    // Dynamic XML Sitemap
+    items.push({
+      id: 'sitemap-schema',
+      title: 'Dynamic XML Schema Sitemap',
+      status: 'pass',
+      message: `XML index file automatically generated with ${siteData.products.length + 3} active URLs.`,
+      scoreImpact: 0
+    });
+
+    return {
+      score: Math.max(score, 30),
+      items
+    };
+  };
+
+  const auditReport = getAuditReport();
+
   return (
     <div className="space-y-6 animate-fadeIn text-slate-800">
-      <div className="border-b border-slate-200 pb-4">
-        <span className="text-[10px] uppercase tracking-[4px] text-indigo-600 font-mono font-bold block mb-1">CULTURX™ SUITE</span>
-        <h2 className="text-xl font-bold uppercase text-slate-950 tracking-widest font-display">SEO Verification & Google Setup Checklist</h2>
-        <p className="text-xs text-slate-500">Monitor and compile search visibility indices, verify Google Analytics pipelines, configure Webmaster profiles and legal terms.</p>
+      
+      {/* Tab Header */}
+      <div className="border-b border-slate-200 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span className="text-[10px] uppercase tracking-[4px] text-indigo-600 font-mono font-bold block mb-1">CULTURX™ SUITE</span>
+          <h2 className="text-xl font-bold uppercase text-slate-950 tracking-widest font-display">SEO Verification & Google Setup Checklist</h2>
+          <p className="text-xs text-slate-500 font-sans">Monitor and compile search visibility indices, verify Google Analytics pipelines, configure Webmaster profiles and legal terms.</p>
+        </div>
+        <button
+          onClick={handleRunAudit}
+          disabled={auditLoading}
+          className="flex items-center space-x-2 px-5 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs font-bold uppercase cursor-pointer hover:bg-slate-800 transition shadow-sm shrink-0 disabled:opacity-75"
+        >
+          {auditLoading ? (
+            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Play className="w-3.5 h-3.5 text-brand-gold fill-current" />
+          )}
+          <span>{auditLoading ? "Auditing Site..." : "Run SEO Audit"}</span>
+        </button>
       </div>
 
-      {/* Progress Summary */}
-      {(() => {
-        const checkedCount = Object.values(seoChecklist).filter(Boolean).length;
-        const totalCount = Object.keys(seoChecklist).length;
-        const percentage = Math.round((checkedCount / totalCount) * 100);
-        return (
-          <div className="bg-slate-950 text-white rounded-3xl p-6 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
-            <div className="space-y-1.5 text-left">
-              <div className="flex items-center space-x-2 text-brand-gold">
-                <Sparkles className="w-5 h-5 text-brand-gold animate-pulse animate-duration-1000" />
-                <h3 className="text-xs font-black uppercase tracking-widest">SEO Content Optimization Level</h3>
-              </div>
-              <p className="text-2xl font-black font-display text-white">
-                {checkedCount} / {totalCount} Parameters <span className="text-brand-gold">({percentage}%)</span>
-              </p>
-              <p className="text-xs text-slate-400">
-                Active metadata headers have successfully compiled against the routing components!
-              </p>
-            </div>
-            <div className="w-full md:w-64 space-y-1">
-              <div className="flex justify-between text-[10px] font-mono tracking-wider text-slate-400 uppercase">
-                <span>Checklist coverage percentage</span>
-                <span>{percentage}%</span>
-              </div>
-              <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#d4af37] to-yellow-500 rounded-full transition-all duration-500"
-                  style={{ width: `${percentage}%` }}
-                />
-              </div>
-            </div>
+      {/* Progress Summary Card */}
+      <div className="bg-slate-950 text-white rounded-3xl p-6 border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl">
+        <div className="space-y-1.5 text-left">
+          <div className="flex items-center space-x-2 text-[#d4af37]">
+            <Sparkles className="w-5 h-5 text-[#d4af37] animate-pulse" />
+            <h3 className="text-xs font-black uppercase tracking-widest">SEO Content Optimization Level</h3>
           </div>
-        );
-      })()}
+          <p className="text-2xl font-black font-display text-white">
+            {checkedBaseItems} / {totalBaseItems} Parameters <span className="text-[#d4af37]">({seoPercentage}%)</span>
+          </p>
+          <p className="text-xs text-slate-400">
+            Active metadata headers have successfully compiled against the routing components!
+          </p>
+        </div>
+        <div className="w-full md:w-64 space-y-1">
+          <div className="flex justify-between text-[10px] font-mono tracking-wider text-slate-400 uppercase">
+            <span>Checklist coverage percentage</span>
+            <span>{seoPercentage}%</span>
+          </div>
+          <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-[#d4af37] to-yellow-500 rounded-full transition-all duration-500"
+              style={{ width: `${seoPercentage}%` }}
+            />
+          </div>
+        </div>
+      </div>
 
+      {/* SEO Main Content Panel */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 text-left">
         
-        {/* Left Side: Checklists grouped */}
+        {/* Left Columns - SEO Audit Forms & Checklist groups */}
         <div className="xl:col-span-8 space-y-6">
 
-          {/* SEO Content Audit Section */}
+          {/* SEO Content Audit Details */}
           <div className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 space-y-4 shadow-xs border-t-4 border-t-[#d4af37]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-2">
               <div className="flex items-center space-x-2 font-bold text-slate-900">
                 <Globe className="w-5 h-5 text-indigo-600 animate-pulse" />
-                <h3 className="text-xs font-black uppercase tracking-widest text-[#d4af37] font-display">SEO Content Audit</h3>
+                <h3 className="text-xs font-black uppercase tracking-widest text-[#d4af37] font-display">SEO Page Snippets</h3>
               </div>
               <span className="text-[10px] bg-indigo-50 text-indigo-600 font-mono tracking-wider font-bold py-1 px-2.2 rounded-full uppercase">
                 Site-Wide Meta Diagnostics
@@ -105,7 +308,7 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                       <div className="space-y-1">
                         <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
                           <label htmlFor={`seo-title-${pageKey}`}>Browser Title Tag</label>
-                          <span className={`${titleCount > 60 ? 'text-amber-600 font-bold' : 'text-slate-400 font-medium'}`}>
+                          <span className={`${titleCount > 60 || titleCount < 40 ? 'text-amber-600 font-bold' : 'text-slate-400 font-medium'}`}>
                             {titleCount}/60 chars
                           </span>
                         </div>
@@ -123,7 +326,7 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                       <div className="space-y-1">
                         <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
                           <label htmlFor={`seo-desc-${pageKey}`}>Meta Description Tag (SERP Snippet)</label>
-                          <span className={`${descCount > 160 ? 'text-amber-630 font-bold' : 'text-slate-400 font-medium'}`}>
+                          <span className={`${descCount > 160 || descCount < 120 ? 'text-amber-600 font-bold' : 'text-slate-400 font-medium'}`}>
                             {descCount}/160 chars
                           </span>
                         </div>
@@ -133,7 +336,7 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                           value={pageData.description}
                           onChange={(e) => handleUpdatePageSeo(pageKey, 'description', e.target.value)}
                           placeholder="Formulate description summarizing the core directory target..."
-                          className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow focus:shadow-sm leading-relaxed"
+                          className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-base text-slate-900 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow focus:shadow-sm leading-relaxed"
                         />
                       </div>
 
@@ -176,25 +379,28 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                 { key: 'imgSizes', label: 'Optimize image dimensions and transfer speeds' },
                 { key: 'https', label: 'Mandate secure layer certificates SSL / HTTPS' }
               ].map((item) => (
-                <label 
-                  key={item.key} 
-                  className="flex items-start space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs"
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => toggleSeoCheck(item.key)}
+                  className="flex items-start text-left space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs w-full border-0 focus:outline-none"
                 >
-                  <input 
-                    type="checkbox" 
-                    checked={seoChecklist[item.key] || false}
-                    onChange={() => toggleSeoCheck(item.key)}
-                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                  />
+                  <div className={`mt-0.5 rounded border flex items-center justify-center w-4.5 h-4.5 shrink-0 ${
+                    seoChecklist[item.key]
+                      ? 'bg-indigo-600 border-indigo-600 text-white'
+                      : 'border-slate-300 text-transparent bg-white'
+                  }`}>
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
                   <span className={`${seoChecklist[item.key] ? 'line-through text-slate-400 font-medium' : 'text-slate-700 font-semibold'}`}>
                     {item.label}
                   </span>
-                </label>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Category 2: Homepage SEO & Suggested Keywords */}
+          {/* Category 2: Homepage SEO & Verification */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 space-y-4 shadow-xs">
             <div className="flex items-center space-x-2 text-indigo-600 font-bold border-b border-slate-100 pb-3">
               <Layers className="w-5 h-5" />
@@ -225,20 +431,23 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                   { key: 'homepageTitle', label: 'Verify Homepage Title is setup in Layout' },
                   { key: 'homepageDesc', label: 'Verify Homepage Meta Description in Layout' }
                 ].map((item) => (
-                  <label 
+                  <button 
                     key={item.key} 
-                    className="flex items-start space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs"
+                    type="button"
+                    onClick={() => toggleSeoCheck(item.key)}
+                    className="flex items-start text-left space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs w-full border-0 focus:outline-none"
                   >
-                    <input 
-                      type="checkbox" 
-                      checked={seoChecklist[item.key] || false}
-                      onChange={() => toggleSeoCheck(item.key)}
-                      className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                    />
+                    <div className={`mt-0.5 rounded border flex items-center justify-center w-4.5 h-4.5 shrink-0 ${
+                      seoChecklist[item.key]
+                        ? 'bg-indigo-600 border-indigo-600 text-white'
+                        : 'border-slate-300 text-transparent bg-white'
+                    }`}>
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
                     <span className={`${seoChecklist[item.key] ? 'line-through text-slate-400 font-medium' : 'text-slate-700 font-semibold'}`}>
                       {item.label}
                     </span>
-                  </label>
+                  </button>
                 ))}
               </div>
             </div>
@@ -258,58 +467,111 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                 { key: 'altGeom', label: 'Describe geometric and biotech tech visuals' },
                 { key: 'altKeywords', label: 'Use natural keywords in image alt attribute tags' }
               ].map((item) => (
-                <label 
+                <button 
                   key={item.key} 
-                  className="flex items-start space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs"
+                  type="button"
+                  onClick={() => toggleSeoCheck(item.key)}
+                  className="flex items-start text-left space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs w-full border-0 focus:outline-none"
                 >
-                  <input 
-                    type="checkbox" 
-                    checked={seoChecklist[item.key] || false}
-                    onChange={() => toggleSeoCheck(item.key)}
-                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                  />
+                  <div className={`mt-0.5 rounded border flex items-center justify-center w-4.5 h-4.5 shrink-0 ${
+                    seoChecklist[item.key]
+                      ? 'bg-indigo-600 border-indigo-600 text-white'
+                      : 'border-slate-300 text-transparent bg-white'
+                  }`}>
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
                   <span className={`${seoChecklist[item.key] ? 'line-through text-slate-400 font-medium' : 'text-slate-700 font-semibold'}`}>
                     {item.label}
                   </span>
-                </label>
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Category 4: Google Connections */}
+          {/* Category 4: Google Infrastructure Setup */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 space-y-4 shadow-xs">
             <div className="flex items-center space-x-2 text-indigo-600 font-bold border-b border-slate-100 pb-3">
               <Settings className="w-5 h-5 animate-spin-slow" />
               <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">4. Google Infrastructure Setup</h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {[
-                { key: 'ga4', label: 'Link up Google Analytics 4 (GA4 Tracking ID)' },
-                { key: 'searchConsole', label: 'Submit URL verification keys under Google Search Console' },
-                { key: 'domainVerify', label: 'Configure Domain Ownership record via DNS TXT keys' },
-                { key: 'sitemap', label: 'Publish and index XML schema sitemap structures' },
-                { key: 'indexing', label: 'Queue page indexes under central crawling crawlers' },
-                { key: 'tagManager', label: 'Setup Google Tag Manager - GTM (Optional)' }
-              ].map((item) => (
-                <label 
-                  key={item.key} 
-                  className="flex items-start space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs"
-                >
-                  <input 
-                    type="checkbox" 
-                    checked={seoChecklist[item.key] || false}
-                    onChange={() => toggleSeoCheck(item.key)}
-                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                  />
-                  <span className={`${seoChecklist[item.key] ? 'line-through text-slate-400 font-medium' : 'text-slate-700 font-semibold'}`}>
-                    {item.label}
+            
+            <div className="space-y-4">
+              
+              {/* Google Analytics 4 Setup Status */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200/80 gap-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase font-mono tracking-widest block">Google Analytics (GA4)</span>
+                  <p className="text-xs font-bold text-slate-800">Tracking Pipeline Status</p>
+                  <p className="text-[11px] text-slate-500">Collects traffic counts, visitor conversion metrics, and shop action logs.</p>
+                </div>
+                {isGa4Connected ? (
+                  <span className="px-3 py-1 bg-green-50 border border-green-200 text-green-700 font-mono text-[10px] font-black rounded-lg uppercase tracking-wide shrink-0">
+                    ✓ Connected: {appSettings.integrations.googleAnalyticsId}
                   </span>
-                </label>
-              ))}
+                ) : (
+                  <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-700 font-mono text-[10px] font-bold rounded-lg uppercase tracking-wide shrink-0">
+                    ⚠ Missing (Set in App Settings)
+                  </span>
+                )}
+              </div>
+
+              {/* Google Search Console Status */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200/80 gap-3">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase font-mono tracking-widest block">Google Search Console</span>
+                  <p className="text-xs font-bold text-slate-800">Domain Index Ownership</p>
+                  <p className="text-[11px] text-slate-500">Indexes URLs, generates index maps, and verifies DNS metadata details.</p>
+                </div>
+                {isGscConnected ? (
+                  <span className="px-3 py-1 bg-green-50 border border-green-200 text-green-700 font-mono text-[10px] font-black rounded-lg uppercase tracking-wide shrink-0">
+                    ✓ Verified: {appSettings.integrations.googleSearchConsoleId}
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 bg-amber-50 border border-amber-200 text-amber-700 font-mono text-[10px] font-bold rounded-lg uppercase tracking-wide shrink-0">
+                    ⚠ Not Verified (Set in App Settings)
+                  </span>
+                )}
+              </div>
+
+              {/* General checkboxes for other Google items */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+                {[
+                  { key: 'domainVerify', label: 'Configure Domain Ownership record via DNS TXT keys' },
+                  { key: 'sitemap', label: 'Publish and index XML schema sitemap structures' },
+                  { key: 'indexing', label: 'Queue page indexes under central crawling crawlers' },
+                  { key: 'tagManager', label: 'Setup Google Tag Manager - GTM (Optional)' }
+                ].map((item) => {
+                  let isChecked = seoChecklist[item.key] || false;
+                  if (item.key === 'sitemap') isChecked = true; // Always active
+                  
+                  return (
+                    <button 
+                      key={item.key} 
+                      type="button"
+                      disabled={item.key === 'sitemap'}
+                      onClick={() => toggleSeoCheck(item.key)}
+                      className={`flex items-start text-left space-x-3 p-3 bg-slate-50 rounded-xl transition text-xs w-full border-0 focus:outline-none ${
+                        item.key !== 'sitemap' ? 'hover:bg-slate-100/70 cursor-pointer' : 'opacity-85'
+                      }`}
+                    >
+                      <div className={`mt-0.5 rounded border flex items-center justify-center w-4.5 h-4.5 shrink-0 ${
+                        isChecked
+                          ? 'bg-indigo-600 border-indigo-600 text-white'
+                          : 'border-slate-300 text-transparent bg-white'
+                      }`}>
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
+                      <span className={`${isChecked ? 'line-through text-slate-400 font-medium' : 'text-slate-700 font-semibold'}`}>
+                        {item.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Category 5: Performance & Mobile Compliance & Legal */}
+          {/* Category 5: Performance, Legal & Guidelines compliance */}
           <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 space-y-4 shadow-xs">
             <div className="flex items-center space-x-2 text-indigo-600 font-bold border-b border-slate-100 pb-3">
               <BookOpen className="w-5 h-5" />
@@ -328,20 +590,23 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                 { key: 'disclaimer', label: 'Integrate transparent clinical liability disclaimer widgets' },
                 { key: 'accessibility', label: 'Integrate full Accessibility Statement layouts' }
               ].map((item) => (
-                <label 
+                <button 
                   key={item.key} 
-                  className="flex items-start space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs"
+                  type="button"
+                  onClick={() => toggleSeoCheck(item.key)}
+                  className="flex items-start text-left space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs w-full border-0 focus:outline-none"
                 >
-                  <input 
-                    type="checkbox" 
-                    checked={seoChecklist[item.key] || false}
-                    onChange={() => toggleSeoCheck(item.key)}
-                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                  />
+                  <div className={`mt-0.5 rounded border flex items-center justify-center w-4.5 h-4.5 shrink-0 ${
+                    seoChecklist[item.key]
+                      ? 'bg-indigo-600 border-indigo-600 text-white'
+                      : 'border-slate-300 text-transparent bg-white'
+                  }`}>
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
                   <span className={`${seoChecklist[item.key] ? 'line-through text-slate-400 font-medium' : 'text-slate-700 font-semibold'}`}>
                     {item.label}
                   </span>
-                </label>
+                </button>
               ))}
             </div>
           </div>
@@ -360,41 +625,44 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                 { key: 'melbourneLcl', label: 'Localize organic search signals in Victoria state / Melbourne region' },
                 { key: 'ecommerceSeo', label: 'Implement advanced shopping feeds for Google Merchant networks' }
               ].map((item) => (
-                <label 
+                <button 
                   key={item.key} 
-                  className="flex items-start space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs"
+                  type="button"
+                  onClick={() => toggleSeoCheck(item.key)}
+                  className="flex items-start text-left space-x-3 p-3 bg-slate-50 hover:bg-slate-100/70 rounded-xl transition cursor-pointer text-xs w-full border-0 focus:outline-none"
                 >
-                  <input 
-                    type="checkbox" 
-                    checked={seoChecklist[item.key] || false}
-                    onChange={() => toggleSeoCheck(item.key)}
-                    className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
-                  />
+                  <div className={`mt-0.5 rounded border flex items-center justify-center w-4.5 h-4.5 shrink-0 ${
+                    seoChecklist[item.key]
+                      ? 'bg-indigo-600 border-indigo-600 text-white'
+                      : 'border-slate-300 text-transparent bg-white'
+                  }`}>
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  </div>
                   <span className={`${seoChecklist[item.key] ? 'line-through text-slate-400 font-medium' : 'text-slate-700 font-semibold'}`}>
                     {item.label}
                   </span>
-                </label>
+                </button>
               ))}
             </div>
           </div>
 
         </div>
-
-        {/* Right Side: Tools, Copyable Assets & Brand Guidelines */}
+        
+        {/* Right Column - Brand Notes & Sitemap Builders */}
         <div className="xl:col-span-4 space-y-6">
           
           {/* Brand Guidelines Card */}
           <div className="bg-slate-950 text-white border border-slate-800 p-6 rounded-2xl space-y-4 shadow-xl text-left">
-            <span className="text-[9px] font-mono tracking-[4px] text-brand-gold uppercase block">Brand Architecture Rules</span>
+            <span className="text-[9px] font-mono tracking-[4px] text-[#d4af37] uppercase block">Brand Architecture Rules</span>
             <h3 className="text-md font-bold font-display uppercase tracking-wider text-white border-b border-neutral-900 pb-2">Important Brand Notes</h3>
             
             <ul className="space-y-4 text-xs text-zinc-400 font-sans">
               <li className="flex items-start space-x-2">
-                <span className="text-brand-gold">✦</span>
+                <span className="text-[#d4af37] shrink-0 font-bold">✦</span>
                 <span>Always spell with **&quot;Optimized&quot;** terminating with a **&quot;Z&quot;** rather than the fallback Commonwealth spelling (keep consistent with standard CULTURX branding specifications).</span>
               </li>
               <li className="flex items-start space-x-2">
-                <span className="text-brand-gold">✦</span>
+                <span className="text-[#d4af37] shrink-0 font-bold">✦</span>
                 <span>Uphold the critical thematic pairing between the **BLACK SYSTEM** (engineered performance, activation, vital action, and somatic endurance) and the **WHITE SYSTEM** (clinical intelligence, regulation, bio-precision, and restoration).</span>
               </li>
             </ul>
@@ -409,24 +677,25 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                 'elite human performance', 'precision fermentation', 'biohacking', 
                 'microbiome optimization', 'supplements', 'recovery'
               ].map((tag) => (
-                <span 
+                <button 
                   key={tag} 
+                  type="button"
                   onClick={() => {
                     if (typeof window !== 'undefined' && navigator.clipboard) {
                       navigator.clipboard.writeText(tag);
                       showToast(`Copied keyword: ${tag}`);
                     }
                   }}
-                  className="bg-slate-100 border border-slate-200 hover:border-slate-300 hover:bg-slate-150 transition-all font-mono font-semibold text-[10px] text-slate-700 px-2.2 py-1 rounded-md cursor-pointer"
+                  className="bg-slate-100 border border-slate-200 hover:border-slate-350 hover:bg-slate-200 transition-all font-mono font-semibold text-[10px] text-slate-700 px-2.2 py-1 rounded-md cursor-pointer border-0 focus:outline-none"
                 >
                   {tag}
-                </span>
+                </button>
               ))}
             </div>
             <p className="text-[10px] text-slate-450 mt-2">Click any keyword element to seamlessly copy it into your system clipboard for draft integration.</p>
           </div>
 
-          {/* Schema Marker & Sitemap Generator Utility */}
+          {/* Sitemap & Robots.txt Download */}
           <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-4 shadow-xs text-left">
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 border-b pb-2">Tools & Code Generators</h3>
             <p className="text-xs text-slate-500 leading-normal">
@@ -479,7 +748,7 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                 document.body.removeChild(a);
                 showToast("Successfully compiled and downloaded sitemap.xml!");
               }}
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition flex items-center justify-center space-x-1 cursor-pointer"
+              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-mono font-bold tracking-wider uppercase transition flex items-center justify-center space-x-1 cursor-pointer border-0"
             >
               <span>Get Dynamic Sitemap.xml</span>
             </button>
@@ -511,6 +780,118 @@ Sitemap: https://culturx.com.au/sitemap.xml`;
         </div>
 
       </div>
+
+      {/* SEO DIAGNOSTIC / CRAWLER AUDIT MODAL SHEET */}
+      {auditOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setAuditOpen(false)} />
+          <div className="relative bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full text-slate-800 shadow-2xl space-y-6 animate-fadeIn max-h-[90vh] overflow-y-auto">
+            {/* Close Button */}
+            <button 
+              onClick={() => setAuditOpen(false)}
+              className="absolute top-6 right-6 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full text-slate-400 hover:text-slate-700 transition cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Modal Header */}
+            <div>
+              <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/35 uppercase tracking-widest">
+                Search Engine Optimization Audit
+              </span>
+              <h3 className="text-xl font-bold uppercase text-slate-900 font-display tracking-tight mt-2">
+                Real-Time Crawler & Index Integrity Report
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">Audit computed on active metadata metrics, local geolocations, and telemetry connection variables.</p>
+            </div>
+
+            {/* Audit Score Dashboard */}
+            <div className="bg-slate-950 text-white rounded-2xl p-6 border border-slate-800 flex items-center justify-between shadow-lg">
+              <div className="space-y-1">
+                <span className="text-[9px] font-mono text-slate-450 uppercase font-black block">Crawl Integrity Score</span>
+                <span className="text-3xl font-black font-display text-white">{auditReport.score}<span className="text-brand-gold">/100</span></span>
+                <p className="text-[10px] text-slate-400 font-sans leading-normal">
+                  {auditReport.score >= 90 ? "Excellent configuration. Crawler bots can fully index URL targets." : "Action required. Configure missing elements in App Settings."}
+                </p>
+              </div>
+              <div className="relative w-16 h-16 flex items-center justify-center shrink-0">
+                <svg className="w-full h-full transform -rotate-90">
+                  <circle cx="32" cy="32" r="28" fill="transparent" stroke="#1e293b" strokeWidth="4" />
+                  <circle 
+                    cx="32" 
+                    cy="32" 
+                    r="28" 
+                    fill="transparent" 
+                    stroke={auditReport.score >= 90 ? '#10b981' : auditReport.score >= 70 ? '#f59e0b' : '#ef4444'} 
+                    strokeWidth="4" 
+                    strokeDasharray={2 * Math.PI * 28}
+                    strokeDashoffset={2 * Math.PI * 28 * (1 - auditReport.score / 100)}
+                    className="transition-all duration-700 ease-out"
+                  />
+                </svg>
+                <span className="absolute text-xs font-bold font-mono">{auditReport.score}%</span>
+              </div>
+            </div>
+
+            {/* Detailed Audited Items list */}
+            <div className="space-y-3 font-sans text-xs">
+              <span className="text-[9px] font-bold tracking-widest text-[#a5801e] font-mono uppercase block mb-1">Diagnostic Checks</span>
+              <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50">
+                {auditReport.items.map((item, idx) => (
+                  <div key={idx} className="p-4 flex items-start space-x-3 transition-colors hover:bg-slate-50">
+                    {item.status === 'pass' && (
+                      <CheckCircle2 className="w-4.5 h-4.5 text-green-500 shrink-0 mt-0.5" />
+                    )}
+                    {item.status === 'warning' && (
+                      <AlertTriangle className="w-4.5 h-4.5 text-amber-500 shrink-0 mt-0.5" />
+                    )}
+                    {item.status === 'error' && (
+                      <ShieldAlert className="w-4.5 h-4.5 text-red-500 shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-slate-900">{item.title}</span>
+                        {item.scoreImpact < 0 && (
+                          <span className="text-[10px] font-bold text-red-500 font-mono">{item.scoreImpact} pts</span>
+                        )}
+                      </div>
+                      <p className="text-slate-500 leading-normal text-[11px]">{item.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actionable recommendations list */}
+            <div className="bg-amber-50/70 border border-amber-200 p-5 rounded-2xl space-y-2 text-left">
+              <span className="text-[9px] font-mono font-bold text-amber-800 tracking-wider uppercase block">Recommendations Action Plan</span>
+              <ul className="list-disc pl-4 space-y-1.5 text-slate-700 text-[11px] font-medium leading-relaxed">
+                {auditReport.items.filter(i => i.status !== 'pass').length === 0 ? (
+                  <li className="list-none pl-0 text-green-700 font-bold flex items-center">
+                    <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
+                    No critical optimization warnings detected!
+                  </li>
+                ) : (
+                  auditReport.items.filter(i => i.status !== 'pass').map((i, idx) => (
+                    <li key={idx}>{i.message}</li>
+                  ))
+                )}
+              </ul>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-200">
+              <button
+                onClick={() => setAuditOpen(false)}
+                className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase rounded-xl tracking-wider transition cursor-pointer"
+              >
+                Close Audit Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

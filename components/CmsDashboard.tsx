@@ -777,6 +777,7 @@ export default function CmsDashboard({
                 seoPages={seoPages}
                 handleUpdatePageSeo={handleUpdatePageSeo}
                 showToast={showToast}
+                appSettings={appSettings}
               />
             )}
 

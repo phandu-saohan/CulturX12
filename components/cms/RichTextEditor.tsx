@@ -282,7 +282,7 @@ export default function RichTextEditor({
                 onInput={handleVisualInput}
                 onBlur={handleVisualInput}
                 data-placeholder={placeholder}
-                className="wysiwyg-editor w-full p-4 text-xs font-sans text-slate-800 focus:outline-none resize-y overflow-y-auto leading-relaxed min-h-[250px] border-0 prose prose-sm max-w-none focus:ring-0 relative"
+                className="wysiwyg-editor w-full p-4 text-base font-sans text-slate-900 focus:outline-none resize-y overflow-y-auto leading-relaxed min-h-[250px] border-0 prose prose-sm max-w-none focus:ring-0 relative"
                 style={{ minHeight: `${rows * 20 + 30}px` }}
                 dangerouslySetInnerHTML={{ __html: value || '' }}
               />
@@ -293,7 +293,7 @@ export default function RichTextEditor({
               value={htmlValue}
               onChange={handleHtmlChange}
               placeholder="<p>Start writing raw HTML content...</p>"
-              className="w-full border-0 p-4 text-xs font-mono text-slate-850 bg-slate-50 focus:outline-none focus:ring-0 resize-y leading-relaxed"
+              className="w-full border-0 p-4 text-sm font-mono text-slate-800 bg-slate-50 focus:outline-none focus:ring-0 resize-y leading-relaxed"
             />
           )}
         </div>
