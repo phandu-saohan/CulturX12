@@ -377,6 +377,7 @@ export default function CmsDashboard({
   const unpaidComingCount = siteData.products.filter(p => p.isComingSoon).length;
   const activeBookingsCount = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed').length;
   const unreadEnquiriesCount = enquiries.filter(e => e.status === 'unread').length;
+  const activeOrdersCount = orders.filter(o => o.status === 'pending').length;
 
   // Handler to open Product CRUD modal
   const handleOpenProductModal = (productToEdit?: Product) => {
@@ -559,7 +560,7 @@ export default function CmsDashboard({
                     <TabIcon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                     <span>{tab.label}</span>
                   </div>
-                  {tab.id === 'bookings' && activeBookingsCount > 0 && (
+                   {tab.id === 'bookings' && activeBookingsCount > 0 && (
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${isActive ? 'bg-black/35 text-indigo-455' : 'bg-indigo-500/20 text-indigo-300'}`}>
                       {activeBookingsCount}
                     </span>
@@ -567,6 +568,11 @@ export default function CmsDashboard({
                   {tab.id === 'inbox' && unreadEnquiriesCount > 0 && (
                     <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-md font-mono font-bold animate-pulse">
                       {unreadEnquiriesCount}
+                    </span>
+                  )}
+                  {tab.id === 'orders' && activeOrdersCount > 0 && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${isActive ? 'bg-black/35 text-indigo-400' : 'bg-amber-500/20 text-amber-300 animate-pulse'}`}>
+                      {activeOrdersCount}
                     </span>
                   )}
                 </button>
@@ -805,6 +811,11 @@ export default function CmsDashboard({
               />
             )}
           </div>
+
+          {/* FOOTER */}
+          <footer className="mt-8 py-6 text-center text-[10px] text-slate-400 tracking-wider border-t border-slate-200">
+            <p className="uppercase">CULTURX™ Admin Board Database Interface — Secure Client Session Sandbox</p>
+          </footer>
         </main>
       </div>
 
@@ -923,10 +934,6 @@ export default function CmsDashboard({
         </div>
       )}
 
-      {/* FOOTER */}
-      <footer className="bg-slate-50 border-t border-slate-200 py-6 text-center text-[10px] text-slate-400 tracking-wider">
-        <p className="uppercase">CULTURX™ Admin Board Database Interface — Secure Client Session Sandbox</p>
-      </footer>
 
     </div>
   );

@@ -284,8 +284,26 @@ export default function Page() {
     );
   }
 
+  const sansFont = appSettings.brand.sansFont || 'Inter';
+  const displayFont = appSettings.brand.displayFont || 'Space Grotesk';
+  const monoFont = appSettings.brand.monoFont || 'JetBrains Mono';
+
+  const formatFontName = (name: string) => name.replace(/ /g, '+');
+  const googleFontsHref = `https://fonts.googleapis.com/css2?family=${formatFontName(sansFont)}:wght@300;400;500;600;700;800;900&family=${formatFontName(displayFont)}:wght@300;400;500;600;700;800;900&family=${formatFontName(monoFont)}:wght@300;400;500;600;700;800;900&display=swap`;
+
   return (
     <>
+      <link rel="stylesheet" href={googleFontsHref} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        :root, html, body {
+          --font-sans: '${sansFont}', sans-serif !important;
+          --font-display: '${displayFont}', sans-serif !important;
+          --font-mono: '${monoFont}', monospace !important;
+        }
+        body {
+          font-family: var(--font-sans) !important;
+        }
+      `}} />
       {isCmsView ? (
         isAuthenticated ? (
           <CmsDashboard

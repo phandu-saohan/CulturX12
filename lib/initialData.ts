@@ -690,6 +690,9 @@ export interface AppSettings {
     faviconEmoji: string;
     faviconUrl: string;      // Base64 or URL of uploaded favicon image
     primaryColor: string;
+    sansFont?: string;
+    displayFont?: string;
+    monoFont?: string;
   };
   contact: {
     email: string;
@@ -750,6 +753,9 @@ export const defaultAppSettings: AppSettings = {
     faviconEmoji: "🧬",
     faviconUrl: "",
     primaryColor: "#4f46e5",
+    sansFont: "Inter",
+    displayFont: "Space Grotesk",
+    monoFont: "JetBrains Mono",
   },
   contact: {
     email: "GP@Culturx.com.au",

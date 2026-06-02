@@ -73,10 +73,10 @@ export default function OrdersTab({ orders, onUpdateOrderStatus, onDeleteOrder, 
                         'bg-amber-50 text-amber-900 border border-amber-200'
                       }`}
                     >
-                      <option value="pending font-sans">⏳ Pending Carriage</option>
-                      <option value="shipped font-sans">✈️ Shipped Carrier</option>
-                      <option value="delivered font-sans">💚 Delivered Handoff</option>
-                      <option value="cancelled font-sans">❌ Void Order</option>
+                      <option value="pending">⏳ Pending Carriage</option>
+                      <option value="shipped">✈️ Shipped Carrier</option>
+                      <option value="delivered">💚 Delivered Handoff</option>
+                      <option value="cancelled">❌ Void Order</option>
                     </select>
                   </td>
                   <td className="py-4 px-4 text-right">

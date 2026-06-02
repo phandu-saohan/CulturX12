@@ -33,6 +33,18 @@ const CURRENCIES = [
   { code: 'JPY', symbol: '¥', label: 'Japanese Yen' },
 ];
 
+const SANS_FONTS = [
+  'Inter', 'Outfit', 'Plus Jakarta Sans', 'Roboto', 'Montserrat', 'DM Sans', 'Geist'
+];
+
+const DISPLAY_FONTS = [
+  'Space Grotesk', 'Playfair Display', 'Syne', 'Cormorant Garamond', 'Cinzel', 'Cabinet Grotesk', 'Unbounded', 'Outfit'
+];
+
+const MONO_FONTS = [
+  'JetBrains Mono', 'Fira Code', 'Space Mono', 'Geist Mono', 'Courier New'
+];
+
 export default function SettingsTab({ appSettings, onSaveAppSettings, showToast }: SettingsTabProps) {
   const [draft, setDraft] = useState<AppSettings>(appSettings);
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
@@ -363,6 +375,53 @@ export default function SettingsTab({ appSettings, onSaveAppSettings, showToast 
                   />
                 </div>
                 <p className="text-[10px] text-slate-400">Used for buttons, links, and accent elements</p>
+              </div>
+
+              {/* ── SITE-WIDE TYPOGRAPHY FONTS ── */}
+              <div className="md:col-span-2 border-t border-slate-100 pt-4 mt-2 space-y-4">
+                <h4 className="text-xs font-bold text-indigo-650 uppercase tracking-widest font-mono">Site-Wide Typography Fonts</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  
+                  {/* Sans Font (Body/System UI) */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold block">Sans-Serif Font (Body & UI)</label>
+                    <select
+                      value={draft.brand.sansFont || 'Inter'}
+                      onChange={e => updateDraft('brand', 'sansFont', e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition cursor-pointer"
+                    >
+                      {SANS_FONTS.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                    <p className="text-[9px] text-slate-400">Applies to general body paragraphs and user interface elements</p>
+                  </div>
+
+                  {/* Display Font (Headings) */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold block">Display Font (Headings)</label>
+                    <select
+                      value={draft.brand.displayFont || 'Space Grotesk'}
+                      onChange={e => updateDraft('brand', 'displayFont', e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition cursor-pointer"
+                    >
+                      {DISPLAY_FONTS.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                    <p className="text-[9px] text-slate-400">Applies to page titles, hero headers, and display text</p>
+                  </div>
+
+                  {/* Mono Font (Logs/Data) */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] text-slate-500 font-mono uppercase tracking-wider font-bold block">Monospace Font (Code & Data)</label>
+                    <select
+                      value={draft.brand.monoFont || 'JetBrains Mono'}
+                      onChange={e => updateDraft('brand', 'monoFont', e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition cursor-pointer"
+                    >
+                      {MONO_FONTS.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                    <p className="text-[9px] text-slate-400">Applies to table codes, system sheets, and terminal readouts</p>
+                  </div>
+
+                </div>
               </div>
             </div>
 
