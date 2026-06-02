@@ -11,7 +11,7 @@ interface ShopSectionProps {
 
 export default function ShopSection({ siteData, onAddToCart, onViewProductSeo }: ShopSectionProps) {
   return (
-    <section id="shop" className="bg-[#050505] py-12 px-6 lg:px-24 border-t border-brand-line/30 scroll-mt-12">
+    <section id="shop" className="bg-[#050505] py-12 px-4 sm:px-6 lg:px-24 border-t border-brand-line/30 scroll-mt-12">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="max-w-4xl">
           <span className="kicker text-[10px] uppercase tracking-[4px] text-brand-gold font-mono font-bold block mb-2">Shop CulturX</span>
@@ -28,7 +28,7 @@ export default function ShopSection({ siteData, onAddToCart, onViewProductSeo }:
           {siteData.products.map((prod) => (
             <div
               key={prod.id}
-              className="bg-neutral-950 border border-brand-line/50 hover:border-brand-gold/80 rounded-3xl p-6 flex flex-col justify-between transition-all duration-200"
+              className="bg-neutral-950 border border-brand-line/50 hover:border-brand-gold/80 rounded-3xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-200"
             >
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
@@ -63,7 +63,16 @@ export default function ShopSection({ siteData, onAddToCart, onViewProductSeo }:
                   <div>
                     <span className="text-[10px] text-neutral-500 block uppercase font-mono">Costing Structure</span>
                     <p className="text-sm font-bold text-brand-gold font-mono">
-                      {prod.isComingSoon ? 'Price TBC' : `$${prod.priceVal} USD`}
+                      {prod.isComingSoon ? (
+                        'Price TBC'
+                      ) : prod.salePriceVal !== undefined && prod.salePriceVal !== null ? (
+                        <>
+                          <span className="line-through text-zinc-500 mr-2">${prod.priceVal}</span>
+                          <span className="text-brand-gold font-extrabold">${prod.salePriceVal} USD</span>
+                        </>
+                      ) : (
+                        `$${prod.priceVal} USD`
+                      )}
                     </p>
                   </div>
                   <button

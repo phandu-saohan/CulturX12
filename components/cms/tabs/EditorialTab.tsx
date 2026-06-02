@@ -2,6 +2,7 @@
 import React from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import { MedicalArticle } from '@/lib/initialData';
+import RichTextEditor from '../RichTextEditor';
 
 interface EditorialTabProps {
   articles: MedicalArticle[];
@@ -291,16 +292,13 @@ export default function EditorialTab({
                 />
               </div>
 
-              <div>
-                <label className="text-slate-500 block mb-1 font-bold uppercase tracking-wider text-[10px]">Core Body Content (Raw Markdown)</label>
-                <textarea 
-                  rows={8}
-                  value={articleForm.content} 
-                  onChange={e => setArticleForm({ ...articleForm, content: e.target.value })} 
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 font-sans focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" 
-                  placeholder="Compose rich publication text using Markdown..."
-                />
-              </div>
+              <RichTextEditor
+                label="Core Body Content (Clinical Intelligence Rich Text)"
+                value={articleForm.content}
+                onChange={val => setArticleForm({ ...articleForm, content: val })}
+                rows={14}
+                placeholder="Start composing your rich clinical publication. Format your text using headings, lists, bold text, and links..."
+              />
 
               <div className="flex justify-end space-x-2 pt-4 border-t border-slate-150">
                 <button 

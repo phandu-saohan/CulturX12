@@ -6,6 +6,7 @@ export interface Product {
   features: string[];
   priceString: string; // e.g. "Coming Soon" or "$45.00"
   priceVal: number;    // for shopping cart calculations
+  salePriceVal?: number; // sale off price
   isComingSoon: boolean;
   sku: string;
   imageUrl?: string;
@@ -628,4 +629,128 @@ export const defaultPaymentConfig: PaymentConfig = {
   payid: { enabled: true, title: "PayID / Osko", details: "Direct bank transfer to email account", payidEmail: "finance@culturx.com.au", businessAbn: "84 657 788 884" },
   apple_google_pay: { enabled: true, title: "Smart Wallet", details: "Express Apple & Google integrations" },
   paypal: { enabled: true, title: "PayPal AU", details: "Direct checkout with premium buyer protection", paypalEmail: "billing@culturx.com.au" }
+};
+
+// ─────────────────────────────────────────────────────────────
+// APP SETTINGS — Global webapp configuration
+// ─────────────────────────────────────────────────────────────
+
+export interface AppSettings {
+  brand: {
+    name: string;
+    tagline: string;
+    domain: string;
+    logoText: string;
+    faviconEmoji: string;
+    faviconUrl: string;      // Base64 or URL of uploaded favicon image
+    primaryColor: string;
+  };
+  contact: {
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    founderName: string;
+    founderTitle: string;
+  };
+  localization: {
+    currency: string;
+    currencySymbol: string;
+    locale: string;
+    timezone: string;
+    targetCity: string;
+    targetRegion: string;
+  };
+  integrations: {
+    stripePublicKey: string;
+    googleAnalyticsId: string;
+    googleSearchConsoleId: string;
+    facebookPixelId: string;
+    supabaseUrl: string;
+    supabaseAnonKey: string;
+  };
+  store: {
+    enableShop: boolean;
+    enableBodyworks: boolean;
+    enableArticles: boolean;
+    enableConcierge: boolean;
+    maintenanceMode: boolean;
+    maintenanceMessage: string;
+  };
+  social: {
+    instagram: string;
+    facebook: string;
+    linkedin: string;
+    tiktok: string;
+    youtube: string;
+  };
+  notifications: {
+    adminEmail: string;
+    adminEmailAlerts: boolean;
+    orderConfirmEmail: boolean;
+    bookingConfirmEmail: boolean;
+    enquiryAlertEmail: boolean;
+  };
+}
+
+export const defaultAppSettings: AppSettings = {
+  brand: {
+    name: "CULTURX™",
+    tagline: "Internal. External. Optimized.",
+    domain: "https://culturx.com.au",
+    logoText: "CULTURX™",
+    faviconEmoji: "🧬",
+    faviconUrl: "",
+    primaryColor: "#4f46e5",
+  },
+  contact: {
+    email: "GP@Culturx.com.au",
+    phone: "+61 457 788 884",
+    address: "Collins Street",
+    city: "Melbourne",
+    state: "Victoria",
+    country: "Australia",
+    founderName: "Gabriela Popa",
+    founderTitle: "Founder",
+  },
+  localization: {
+    currency: "AUD",
+    currencySymbol: "$",
+    locale: "en-AU",
+    timezone: "Australia/Melbourne",
+    targetCity: "Melbourne",
+    targetRegion: "Victoria",
+  },
+  integrations: {
+    stripePublicKey: "",
+    googleAnalyticsId: "",
+    googleSearchConsoleId: "",
+    facebookPixelId: "",
+    supabaseUrl: "https://ayvnxquhmbyvljfmsdtq.supabase.co",
+    supabaseAnonKey: "sb_publishable_VWe1bP7wYNktlq-9j7Djag_uiV5SjW3",
+  },
+  store: {
+    enableShop: true,
+    enableBodyworks: true,
+    enableArticles: true,
+    enableConcierge: true,
+    maintenanceMode: false,
+    maintenanceMessage: "We're currently upgrading our systems. Check back soon.",
+  },
+  social: {
+    instagram: "https://instagram.com/culturx",
+    facebook: "",
+    linkedin: "",
+    tiktok: "",
+    youtube: "",
+  },
+  notifications: {
+    adminEmail: "GP@Culturx.com.au",
+    adminEmailAlerts: true,
+    orderConfirmEmail: true,
+    bookingConfirmEmail: true,
+    enquiryAlertEmail: true,
+  },
 };

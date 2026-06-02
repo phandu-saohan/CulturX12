@@ -19,6 +19,7 @@ interface ProductsTabProps {
   handleDragLeave: (e: React.DragEvent) => void;
   handleDrop: (e: React.DragEvent) => void;
   handleImageFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onViewProductSeo?: (prod: Product) => void;
 }
 
 export default function ProductsTab({
@@ -36,7 +37,8 @@ export default function ProductsTab({
   handleDragOver,
   handleDragLeave,
   handleDrop,
-  handleImageFileChange
+  handleImageFileChange,
+  onViewProductSeo
 }: ProductsTabProps) {
   return (
     <div className="space-y-6">
@@ -80,7 +82,16 @@ export default function ProductsTab({
                   <span className="bg-slate-100 px-2.5 py-1 border border-slate-200 rounded text-[10px] uppercase font-bold text-slate-650 font-mono">{prod.category}</span>
                 </td>
                 <td className="py-4 px-4 font-semibold text-slate-600 font-mono">{prod.sku}</td>
-                <td className="py-4 px-4 text-indigo-650 font-bold font-mono">${prod.priceVal} USD</td>
+                <td className="py-4 px-4 text-indigo-650 font-bold font-mono">
+                  {prod.salePriceVal !== undefined && prod.salePriceVal !== null ? (
+                    <div>
+                      <span className="line-through text-slate-400 mr-1.5">${prod.priceVal}</span>
+                      <span className="text-emerald-600">${prod.salePriceVal} USD</span>
+                    </div>
+                  ) : (
+                    `$${prod.priceVal} USD`
+                  )}
+                </td>
                 <td className="py-4 px-4 font-sans">
                   {prod.isComingSoon ? (
                     <span className="text-[10px] font-semibold text-amber-700 bg-amber-5 border border-amber-200 px-2.5 py-1 rounded-full">
@@ -93,6 +104,12 @@ export default function ProductsTab({
                   )}
                 </td>
                 <td className="py-4 px-4 text-right space-x-1.5 font-sans">
+                  <button
+                    onClick={() => onViewProductSeo && onViewProductSeo(prod)}
+                    className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[10.5px] uppercase font-bold transition cursor-pointer"
+                  >
+                    SEO
+                  </button>
                   <button
                     onClick={() => handleOpenProductModal(prod)}
                     className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10.5px] uppercase font-bold transition cursor-pointer"
@@ -173,24 +190,27 @@ export default function ProductsTab({
                 />
               </div>
 
-              <div>
-                <label className="text-slate-500 block mb-1 font-semibold">Product Claims & Narrative</label>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-xs text-slate-500">
+                  <label className="font-semibold">Product Claims & Narrative</label>
+                  <span className="text-slate-400 font-mono text-[10px]">{productForm.description?.length || 0} chars</span>
+                </div>
                 <textarea 
-                  rows={3}
+                  rows={6}
                   value={productForm.description}
                   onChange={e => setProductForm({ ...productForm, description: e.target.value })}
                   placeholder="Precision-fermented kombucha elixirs for microbiome protection."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-850 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500" 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-850 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed" 
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="text-slate-500 block mb-1 font-semibold">Launch Sale Status</label>
                   <select 
                     value={String(productForm.isComingSoon)}
                     onChange={e => setProductForm({ ...productForm, isComingSoon: e.target.value === 'true' })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-800 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-850 focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 text-xs"
                   >
                     <option value="true">Coming Soon</option>
                     <option value="false">Buy Now Active</option>
@@ -205,6 +225,18 @@ export default function ProductsTab({
                     min={0}
                     value={productForm.priceVal}
                     onChange={e => setProductForm({ ...productForm, priceVal: Number(e.target.value) })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-850 font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono text-xs" 
+                  />
+                </div>
+
+                <div>
+                  <label className="text-slate-500 block mb-1 font-semibold">Sale off price ($ USD)</label>
+                  <input 
+                    type="number" 
+                    min={0}
+                    value={productForm.salePriceVal !== undefined && productForm.salePriceVal !== null ? productForm.salePriceVal : ''}
+                    onChange={e => setProductForm({ ...productForm, salePriceVal: e.target.value ? Number(e.target.value) : undefined })}
+                    placeholder="None"
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-slate-850 font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono text-xs" 
                   />
                 </div>

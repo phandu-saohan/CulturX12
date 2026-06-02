@@ -7,7 +7,7 @@ interface ProductsSectionProps { siteData: CulturXData; }
 
 export default function ProductsSection({ siteData }: ProductsSectionProps) {
   return (
-    <section id="products" className="bg-gradient-to-b from-[#fff] to-[#f4efe3] text-zinc-900 py-12 px-6 lg:px-24 scroll-mt-12">
+    <section id="products" className="bg-gradient-to-b from-[#fff] to-[#f4efe3] text-zinc-900 py-12 px-4 sm:px-6 lg:px-24 scroll-mt-12">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center space-y-2">
           <span className="kicker text-[10px] uppercase tracking-[4px] text-[#9c741d] font-mono font-black block">CulturX Product System</span>
@@ -21,7 +21,7 @@ export default function ProductsSection({ siteData }: ProductsSectionProps) {
           {siteData.products.slice(0, 5).map((prod) => (
             <div
               key={prod.id}
-              className="bg-white rounded-3xl p-6 border border-[#9c741d]/30 hover:border-[#d4af37] shadow-xl flex flex-col justify-between transition-all"
+              className="bg-white rounded-3xl p-5 sm:p-6 border border-[#9c741d]/30 hover:border-[#d4af37] shadow-xl flex flex-col justify-between transition-all"
             >
               <div>
                 <span className="text-[9.5px] font-bold font-mono tracking-wider text-[#9c741d] bg-[#fdfaf2] border border-[#9c741d]/20 px-3 py-1 rounded-full uppercase block w-fit mb-3">
@@ -67,7 +67,14 @@ export default function ProductsSection({ siteData }: ProductsSectionProps) {
                     </span>
                   ) : (
                     <span className="text-sm font-extrabold text-neutral-950 font-mono">
-                      ${prod.priceVal} USD
+                      {prod.salePriceVal !== undefined && prod.salePriceVal !== null ? (
+                        <>
+                          <span className="line-through text-zinc-400 mr-2">${prod.priceVal}</span>
+                          <span className="text-emerald-600">${prod.salePriceVal} USD</span>
+                        </>
+                      ) : (
+                        `$${prod.priceVal} USD`
+                      )}
                     </span>
                   )}
                 </div>

@@ -9,7 +9,7 @@ import {
   HelpCircle, Sparkles, BookOpen, Layers, Globe, FileText,
   LogOut
 } from 'lucide-react';
-import { CulturXData, Product, Booking, Enquiry, Order, defaultCulturXData, MedicalArticle, PaymentConfig, defaultPaymentConfig, PaymentMethodSetting } from '@/lib/initialData';
+import { CulturXData, Product, Booking, Enquiry, Order, defaultCulturXData, MedicalArticle, PaymentConfig, defaultPaymentConfig, PaymentMethodSetting, AppSettings } from '@/lib/initialData';
 import OverviewTab from '@/components/cms/tabs/OverviewTab';
 import BookingsTab from '@/components/cms/tabs/BookingsTab';
 import OrdersTab from '@/components/cms/tabs/OrdersTab';
@@ -19,6 +19,7 @@ import SystemTab from '@/components/cms/tabs/SystemTab';
 import EditorialTab from '@/components/cms/tabs/EditorialTab';
 import ProductsTab from '@/components/cms/tabs/ProductsTab';
 import ContentTab from '@/components/cms/tabs/ContentTab';
+import SettingsTab from '@/components/cms/tabs/SettingsTab';
 
 interface CmsDashboardProps {
   siteData: CulturXData;
@@ -45,6 +46,8 @@ interface CmsDashboardProps {
   onResetToDefaults: () => void;
   toggleLiveSite: () => void;
   onLogout?: () => void;
+  appSettings: AppSettings;
+  onSaveAppSettings: (updated: AppSettings) => Promise<void>;
 }
 
 export default function CmsDashboard({
@@ -71,10 +74,12 @@ export default function CmsDashboard({
   onImportBackup,
   onResetToDefaults,
   toggleLiveSite,
-  onLogout
+  onLogout,
+  appSettings,
+  onSaveAppSettings,
 }: CmsDashboardProps) {
   // Navigation Tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'products' | 'bookings' | 'orders' | 'inbox' | 'system' | 'seo' | 'editorial'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'products' | 'bookings' | 'orders' | 'inbox' | 'system' | 'seo' | 'editorial' | 'settings'>('overview');
 
   // SEO Checklist items state backed by localStorage
   const [seoChecklist, setSeoChecklist] = useState<Record<string, boolean>>(() => {
@@ -222,12 +227,14 @@ export default function CmsDashboard({
   // Product Add/Edit Dialog modal state
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProductSeo, setSelectedProductSeo] = useState<Product | null>(null);
   const [productForm, setProductForm] = useState({
     category: '',
     name: '',
     description: '',
     featuresString: '',
     priceVal: 0,
+    salePriceVal: undefined as number | undefined,
     isComingSoon: true,
     sku: '',
     imageUrl: '',
@@ -379,6 +386,7 @@ export default function CmsDashboard({
         description: productToEdit.description,
         featuresString: productToEdit.features ? productToEdit.features.join(', ') : '',
         priceVal: productToEdit.priceVal,
+        salePriceVal: productToEdit.salePriceVal,
         isComingSoon: productToEdit.isComingSoon,
         sku: productToEdit.sku,
         imageUrl: productToEdit.imageUrl || '',
@@ -391,6 +399,7 @@ export default function CmsDashboard({
         description: '',
         featuresString: 'Raw cultures, Microbiome friendly',
         priceVal: 15,
+        salePriceVal: undefined,
         isComingSoon: false,
         sku: `CX-PROD-${Math.floor(1000 + Math.random() * 9000)}`,
         imageUrl: 'https://picsum.photos/seed/kombucha/600/600',
@@ -418,6 +427,7 @@ export default function CmsDashboard({
       features: cleanedFeatures,
       priceString: productForm.isComingSoon ? "Coming Soon" : `$${productForm.priceVal}.00 USD`,
       priceVal: Number(productForm.priceVal),
+      salePriceVal: productForm.salePriceVal !== undefined && productForm.salePriceVal !== null && productForm.salePriceVal !== 0 ? Number(productForm.salePriceVal) : undefined,
       isComingSoon: productForm.isComingSoon,
       sku: productForm.sku,
       imageUrl: productForm.imageUrl || 'https://picsum.photos/seed/kombucha/600/600',
@@ -546,6 +556,7 @@ export default function CmsDashboard({
                 { id: 'inbox', label: '📥 Client Inbox' },
                 { id: 'seo', label: '🔍 SEO & Google Centric' },
                 { id: 'system', label: '⚙️ System Backups' },
+                { id: 'settings', label: '🎛️ App Settings' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -625,6 +636,7 @@ export default function CmsDashboard({
               handleDragLeave={handleDragLeave}
               handleDrop={handleDrop}
               handleImageFileChange={handleImageFileChange}
+              onViewProductSeo={setSelectedProductSeo}
             />
           )}
 
@@ -703,8 +715,132 @@ export default function CmsDashboard({
             />
           )}
 
+          {/* TAB 10: APP SETTINGS */}
+          {activeTab === 'settings' && (
+            <SettingsTab
+              appSettings={appSettings}
+              onSaveAppSettings={onSaveAppSettings}
+              showToast={showToast}
+            />
+          )}
+
         </main>
       </div>
+
+      {/* SEO DIAGNOSTIC MODAL SHEET FOR PRODUCTS */}
+      {selectedProductSeo && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setSelectedProductSeo(null)} />
+          <div className="relative bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-xl w-full text-slate-800 shadow-2xl space-y-6">
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedProductSeo(null)}
+              className="absolute top-6 right-6 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full text-slate-400 hover:text-slate-700 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-bold font-mono px-2.5 py-1 rounded bg-indigo-50 text-indigo-650 border border-indigo-200 uppercase tracking-widest">
+                SEO & Indexing Diagnostics
+              </span>
+              <h3 className="text-md font-bold uppercase text-slate-900 font-display tracking-tight mt-2">
+                {selectedProductSeo.name} — Metadata Sheet
+              </h3>
+              <p className="text-[11px] text-slate-500 mt-1">Configure keyword indexes, Rich Snippets, canonical tags, and localization targets tailored for Melbourne, Victoria.</p>
+            </div>
+
+            {/* SECTION 1: GOOGLE SERP SIMULATOR */}
+            <div className="space-y-2">
+              <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#a5801e] font-mono">Google SERP Snippet Simulator (Google Search Presentation)</h4>
+              
+              <div className="bg-white rounded-2xl p-5 border border-slate-200 text-zinc-900 font-sans shadow-xs">
+                {/* Google citation hierarchy */}
+                <div className="flex items-center space-x-1 text-xs text-zinc-500 mb-1 leading-none font-mono">
+                  <span>https://culturx.com.au</span>
+                  <span>›</span>
+                  <span>shop</span>
+                  <span>›</span>
+                  <span>{selectedProductSeo.sku.toLowerCase()}</span>
+                </div>
+                {/* Google Blue Link Title */}
+                <span className="text-base text-[#1a56db] hover:underline font-medium leading-tight block">
+                  CULTURX™ {selectedProductSeo.name} | Premium Human Optimization Melbourne
+                </span>
+                {/* Google Meta Description with Melbourne target */}
+                <p className="text-[11px] text-zinc-650 leading-relaxed mt-2">
+                  CULTURX™ is premium science: Buy **{selectedProductSeo.name}** in Melbourne, Australia. Clinical gut microbiota restoration biohacking and executive recovery formulas configured directly.
+                </p>
+              </div>
+            </div>
+
+            {/* SECTION 2: METADATA SUMMARY METRICS */}
+            <div className="border-t border-slate-200 pt-4 space-y-3 font-mono text-[10.5px]">
+              <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#a5801e]">Direct Meta & Header Elements</h4>
+              
+              <div className="space-y-2 divide-y divide-slate-100 bg-slate-50 border border-slate-200 p-4 rounded-xl text-slate-700">
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500 shrink-0">Meta Title:</span>
+                  <span className="text-slate-900 text-right font-sans font-bold">CULTURX™ {selectedProductSeo.name} | Melbourne Premium Biohacking</span>
+                </div>
+                <div className="pt-2 flex justify-between gap-4">
+                  <span className="text-slate-500 shrink-0">Meta Description:</span>
+                  <span className="text-slate-900 text-right font-sans max-w-sm text-xs leading-normal">CULTURX™ {selectedProductSeo.name}. Buy clinical-grade digestive microbiome optimization and premium executive recovery formulas in Melbourne, Victoria, Australia.</span>
+                </div>
+                <div className="pt-2 flex justify-between gap-4">
+                  <span className="text-slate-500 shrink-0">Canonical URL:</span>
+                  <span className="text-indigo-650 font-bold font-mono">https://culturx.com.au/shop/{selectedProductSeo.sku.toLowerCase()}</span>
+                </div>
+                <div className="pt-2 flex justify-between gap-4">
+                  <span className="text-slate-500 shrink-0">Local Targeting:</span>
+                  <span className="text-slate-800">Melbourne VIC, Collins St, Ritz-Carlton, Park Hyatt</span>
+                </div>
+              </div>
+            </div>
+
+            {/* SECTION 3: SCHEMAS RAW PLAYLOAD PREVIEW */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-[10px] font-bold tracking-widest text-[#a5801e] uppercase font-mono">
+                <span>Product Schema Payload (JSON-LD)</span>
+                <span className="text-emerald-600">✓ Valid Schema.org Struct</span>
+              </div>
+              
+              <pre className="bg-slate-950 border border-slate-800 p-4 rounded-xl text-[10px] font-mono text-zinc-300 overflow-x-auto max-h-40 leading-relaxed scrollbar-thin">
+{`{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "CulturX™ ${selectedProductSeo.name}",
+  "sku": "${selectedProductSeo.sku}",
+  "category": "${selectedProductSeo.category}",
+  "description": "${selectedProductSeo.description}",
+  "brand": {
+    "@type": "Brand",
+    "name": "CulturX™"
+  },
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "USD",
+    "price": "${selectedProductSeo.salePriceVal !== undefined && selectedProductSeo.salePriceVal !== null ? selectedProductSeo.salePriceVal : selectedProductSeo.priceVal}",
+    "priceValidUntil": "2027-12-31",
+    "availability": "https://schema.org/InStock",
+    "url": "https://culturx.com.au/#shop"
+  },
+  "areaServed": "Melbourne, Victoria, Australia"
+}`}
+              </pre>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-200">
+              <button
+                onClick={() => setSelectedProductSeo(null)}
+                className="px-5 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white text-xs font-bold uppercase rounded-xl tracking-wider transition cursor-pointer"
+              >
+                Close SEO Diagnostics
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* FOOTER */}
       <footer className="bg-slate-50 border-t border-slate-200 py-6 text-center text-[10px] text-slate-400 tracking-wider">

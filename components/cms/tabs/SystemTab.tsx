@@ -65,12 +65,16 @@ export default function SystemTab({
           </p>
 
           <form onSubmit={handleImportData} className="space-y-2">
+            <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+              <label>Raw JSON Backup Code</label>
+              <span className="text-slate-400 font-mono">{backupJsonText.length} chars</span>
+            </div>
             <textarea
-              rows={5}
+              rows={8}
               value={backupJsonText}
               onChange={e => setBackupJsonText(e.target.value)}
               placeholder='Paste JSON code here i.e. { "siteData": {...}, "bookings": [...] }'
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 placeholder-slate-400 font-mono focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-800 placeholder-slate-400 font-mono focus:bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed"
             />
             <button
               type="submit"

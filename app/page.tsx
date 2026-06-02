@@ -7,6 +7,7 @@ import {
   defaultEnquiries, 
   defaultArticles,
   defaultPaymentConfig,
+  defaultAppSettings,
   CulturXData, 
   Booking, 
   Enquiry, 
@@ -14,7 +15,8 @@ import {
   OrderItem,
   Product,
   MedicalArticle,
-  PaymentConfig
+  PaymentConfig,
+  AppSettings
 } from '@/lib/initialData';
 import PublicWebsite from '@/components/PublicWebsite';
 import CmsDashboard from '@/components/CmsDashboard';
@@ -33,6 +35,7 @@ export default function Page() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [articles, setArticles] = useState<MedicalArticle[]>([]);
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>(defaultPaymentConfig);
+  const [appSettings, setAppSettings] = useState<AppSettings>(defaultAppSettings);
 
   // 1. Core cloud loader on initialization
   useEffect(() => {
@@ -67,6 +70,9 @@ export default function Page() {
 
         const fetchedPaymentConfig = await fetchStateFromSupabase<PaymentConfig>('payment_config', defaultPaymentConfig);
         setPaymentConfig(fetchedPaymentConfig);
+
+        const fetchedAppSettings = await fetchStateFromSupabase<AppSettings>('app_settings', defaultAppSettings);
+        setAppSettings(fetchedAppSettings);
 
         setMounted(true);
       } catch (err) {
@@ -108,6 +114,12 @@ export default function Page() {
     await saveStateToSupabase('payment_config', newConfig);
     // Also keep localStorage in sync for immediate reads
     try { localStorage.setItem('culturx_payment_config', JSON.stringify(newConfig)); } catch {}
+  };
+
+  const saveAppSettingsToStorage = async (newSettings: AppSettings) => {
+    setAppSettings(newSettings);
+    await saveStateToSupabase('app_settings', newSettings);
+    try { localStorage.setItem('culturx_app_settings', JSON.stringify(newSettings)); } catch {}
   };
 
   // HANDLERS FOR PUBLIC SITE SUBMISSIONS
@@ -254,6 +266,7 @@ export default function Page() {
     await saveOrdersToStorage([]);
     await saveArticlesToStorage(defaultArticles);
     await savePaymentConfigToStorage(defaultPaymentConfig);
+    await saveAppSettingsToStorage(defaultAppSettings);
   };
 
   // Avoid hydration mismatch loader
@@ -277,33 +290,35 @@ export default function Page() {
         isAuthenticated ? (
           <CmsDashboard
             siteData={siteData}
-          bookings={bookings}
-          enquiries={enquiries}
-          orders={orders}
-          articles={articles}
-          paymentConfig={paymentConfig}
-          onSaveSiteData={saveSiteDataToStorage}
-          onSavePaymentConfig={savePaymentConfigToStorage}
-          onUpdateBookingStatus={handleUpdateBookingStatus}
-          onDeleteBooking={handleDeleteBooking}
-          onUpdateOrderStatus={handleUpdateOrderStatus}
-          onDeleteOrder={handleDeleteOrder}
-          onUpdateEnquiryStatus={handleUpdateEnquiryStatus}
-          onDeleteEnquiry={handleDeleteEnquiry}
-          onAddProduct={handleAddProduct}
-          onEditProduct={handleEditProduct}
-          onDeleteProduct={handleDeleteProduct}
-          onAddArticle={handleAddArticle}
-          onEditArticle={handleEditArticle}
-          onDeleteArticle={handleDeleteArticle}
-          onImportBackup={handleImportBackup}
-          onResetToDefaults={handleResetToDefaults}
-          toggleLiveSite={() => setIsCmsView(false)}
-          onLogout={async () => {
-            await supabase.auth.signOut();
-            setIsAuthenticated(false);
-          }}
-        />
+            bookings={bookings}
+            enquiries={enquiries}
+            orders={orders}
+            articles={articles}
+            paymentConfig={paymentConfig}
+            appSettings={appSettings}
+            onSaveSiteData={saveSiteDataToStorage}
+            onSavePaymentConfig={savePaymentConfigToStorage}
+            onSaveAppSettings={saveAppSettingsToStorage}
+            onUpdateBookingStatus={handleUpdateBookingStatus}
+            onDeleteBooking={handleDeleteBooking}
+            onUpdateOrderStatus={handleUpdateOrderStatus}
+            onDeleteOrder={handleDeleteOrder}
+            onUpdateEnquiryStatus={handleUpdateEnquiryStatus}
+            onDeleteEnquiry={handleDeleteEnquiry}
+            onAddProduct={handleAddProduct}
+            onEditProduct={handleEditProduct}
+            onDeleteProduct={handleDeleteProduct}
+            onAddArticle={handleAddArticle}
+            onEditArticle={handleEditArticle}
+            onDeleteArticle={handleDeleteArticle}
+            onImportBackup={handleImportBackup}
+            onResetToDefaults={handleResetToDefaults}
+            toggleLiveSite={() => setIsCmsView(false)}
+            onLogout={async () => {
+              await supabase.auth.signOut();
+              setIsAuthenticated(false);
+            }}
+          />
         ) : (
           <CmsLoginGate onLoginSuccess={() => setIsAuthenticated(true)} />
         )
@@ -312,6 +327,7 @@ export default function Page() {
           siteData={siteData}
           articles={articles}
           paymentConfig={paymentConfig}
+          appSettings={appSettings}
           onBookTreatment={handleBookTreatment}
           onSubmitEnquiry={handleSubmitEnquiry}
           onPlaceOrder={handlePlaceOrder}

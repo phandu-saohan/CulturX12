@@ -7,13 +7,14 @@ import {
   ChevronRight, Check, CheckCircle, Info, ShoppingCart, 
   Trash2, Landmark, ShieldCheck, HeartPulse, Search, BookOpen, Clock, User, ExternalLink, Activity, CreditCard, Wallet
 } from 'lucide-react';
-import { CulturXData, Product, Booking, Enquiry, Order, OrderItem, MedicalArticle, PaymentConfig } from '@/lib/initialData';
+import { CulturXData, Product, Booking, Enquiry, Order, OrderItem, MedicalArticle, PaymentConfig, AppSettings, defaultAppSettings } from '@/lib/initialData';
 import AIChatbot from '@/components/public/AIChatbot';
 
 interface PublicWebsiteProps {
   siteData: CulturXData;
   articles: MedicalArticle[];
   paymentConfig: PaymentConfig;
+  appSettings?: AppSettings;
   onBookTreatment: (bookingData: Omit<Booking, 'id' | 'createdAt' | 'status'>) => void;
   onSubmitEnquiry: (enquiryData: Omit<Enquiry, 'id' | 'createdAt' | 'status'>) => void;
   onPlaceOrder: (orderData: { clientName: string; clientEmail: string; clientPhone: string; shippingAddress: string; items: OrderItem[]; totalAmount: number }) => void;
@@ -24,11 +25,15 @@ export default function PublicWebsite({
   siteData,
   articles,
   paymentConfig,
+  appSettings: appSettingsProp,
   onBookTreatment,
   onSubmitEnquiry,
   onPlaceOrder,
   toggleCms
 }: PublicWebsiteProps) {
+  const appSettings = appSettingsProp ?? defaultAppSettings;
+  const currencySymbol = appSettings.localization.currencySymbol || '$';
+  const brandName = appSettings.brand.logoText || siteData.hero.brandLogo;
   const visible: any = siteData.sectionVisibility || {};
   const showHero = visible.hero !== false;
   const showManifesto = visible.manifesto !== false;
@@ -62,7 +67,8 @@ export default function PublicWebsite({
   });
 
   // Booking Form state
-  const [selectedTxId, setSelectedTxId] = useState<string>(siteData.bodyworks.treatments[0]?.id || '');
+  const [selectedTxId, setSelectedTxId] = useState<string>(siteData.bodyworks?.treatments?.[0]?.id || '');
+
   const [bookingForm, setBookingForm] = useState({
     name: '',
     email: '',
@@ -70,7 +76,7 @@ export default function PublicWebsite({
     hotelName: '',
     hotelRoom: '',
     preferredTime: '',
-    therapistProfile: siteData.bodyworks.cardTexts[0] || 'Senior Practitioner - General Recovery'
+    therapistProfile: siteData.bodyworks?.cardTexts?.[0] || 'Senior Practitioner - General Recovery'
   });
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
@@ -78,7 +84,7 @@ export default function PublicWebsite({
   const [enquiryForm, setEnquiryForm] = useState({
     name: '',
     email: '',
-    type: siteData.contact.enquiries[0] || 'Product enquiry',
+    type: siteData.contact?.enquiries?.[0] || 'Product enquiry',
     message: ''
   });
   const [enquirySuccess, setEnquirySuccess] = useState(false);
@@ -135,7 +141,7 @@ export default function PublicWebsite({
               id: i.product.id,
               sku: i.product.sku,
               name: i.product.name,
-              price: i.product.priceVal,
+              price: i.product.salePriceVal !== undefined && i.product.salePriceVal !== null ? i.product.salePriceVal : i.product.priceVal,
               qty: i.qty
             }));
             successTotal = pendingOrder.totalAmount;
@@ -200,7 +206,10 @@ export default function PublicWebsite({
 
   // total cart quantity
   const cartTotalQty = cart.reduce((acc, item) => acc + item.qty, 0);
-  const cartSubtotal = cart.reduce((acc, item) => acc + (item.product.priceVal * item.qty), 0);
+  const cartSubtotal = cart.reduce((acc, item) => {
+    const price = item.product.salePriceVal !== undefined && item.product.salePriceVal !== null ? item.product.salePriceVal : item.product.priceVal;
+    return acc + (price * item.qty);
+  }, 0);
 
   // handle checkout submit
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
@@ -237,7 +246,7 @@ export default function PublicWebsite({
               name: item.product.name,
               sku: item.product.sku,
               qty: item.qty,
-              price: item.product.priceVal,
+              price: item.product.salePriceVal !== undefined && item.product.salePriceVal !== null ? item.product.salePriceVal : item.product.priceVal,
               imageUrl: item.product.imageUrl
             })),
             customerInfo
@@ -269,7 +278,7 @@ export default function PublicWebsite({
         name: item.product.name,
         sku: item.product.sku,
         qty: item.qty,
-        price: item.product.priceVal
+        price: item.product.salePriceVal !== undefined && item.product.salePriceVal !== null ? item.product.salePriceVal : item.product.priceVal
       })),
       totalAmount: cartSubtotal
     });
@@ -283,7 +292,7 @@ export default function PublicWebsite({
         sku: item.product.sku,
         name: item.product.name,
         category: item.product.category,
-        price: item.product.priceVal,
+        price: item.product.salePriceVal !== undefined && item.product.salePriceVal !== null ? item.product.salePriceVal : item.product.priceVal,
         qty: item.qty
       }))
     });
@@ -300,7 +309,7 @@ export default function PublicWebsite({
       return;
     }
 
-    const txObj = siteData.bodyworks.treatments.find(t => t.id === selectedTxId);
+    const txObj = siteData.bodyworks?.treatments?.find(t => t.id === selectedTxId);
     if (!txObj) return;
 
     onBookTreatment({
@@ -348,18 +357,36 @@ export default function PublicWebsite({
     setEnquirySuccess(true);
     setEnquiryForm({
       name: '',
-      email: siteData.contact.enquiries[0] || 'Product enquiry',
-      type: 'Product enquiry',
+      email: '',
+      type: siteData.contact?.enquiries?.[0] || 'Product enquiry',
       message: ''
     });
     setTimeout(() => setEnquirySuccess(false), 9000);
   };
 
-  const activeTreatment = siteData.bodyworks.treatments.find(t => t.id === selectedTxId);
+  const activeTreatment = siteData.bodyworks?.treatments?.find(t => t.id === selectedTxId);
 
   return (
     <div id="top" className="min-h-screen bg-brand-black text-white relative flex flex-col selection:bg-brand-gold selection:text-brand-black">
-      
+
+      {/* MAINTENANCE MODE SCREEN */}
+      {appSettings.store.maintenanceMode && (
+        <div className="fixed inset-0 z-[999] bg-[#050505] flex flex-col items-center justify-center text-center px-6">
+          <div className="space-y-6 max-w-md">
+            <p className="text-brand-gold font-mono text-xs uppercase tracking-widest animate-pulse">System Maintenance</p>
+            <h1 className="text-4xl font-black tracking-[4px] text-white font-display uppercase">{brandName}</h1>
+            <div className="w-16 h-0.5 bg-brand-gold/40 mx-auto rounded-full" />
+            <p className="text-sm text-brand-soft leading-relaxed">{appSettings.store.maintenanceMessage}</p>
+            <button
+              onClick={toggleCms}
+              className="mt-4 text-[10px] text-slate-600 hover:text-slate-400 transition font-mono uppercase tracking-widest"
+            >
+              Admin Access →
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* STRUCTURED JSON-LD SCHEMAS FOR SEO CRAWLERS & ACTIVE SEARCH CRITERIA */}
       <script
         type="application/ld+json"
@@ -420,7 +447,7 @@ export default function PublicWebsite({
       />
 
       {/* HEADER NAVIGATION */}
-      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 lg:px-24 py-4 bg-brand-black/90 border-b border-brand-line/50 backdrop-blur-md">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-4 sm:px-6 lg:px-24 py-4 bg-brand-black/90 border-b border-brand-line/50 backdrop-blur-md">
         <div className="brand" id="nav-brand">
           <a href="#top" className="text-xl font-bold tracking-[3px] text-brand-gold font-display transition hover:opacity-80">
             {siteData.hero.brandLogo}
@@ -485,22 +512,22 @@ export default function PublicWebsite({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-[68px] left-0 right-0 z-40 bg-black/95 border-b border-brand-line/60 p-6 flex flex-col space-y-4 text-center text-sm font-semibold uppercase tracking-widest lg:hidden"
+            className="fixed top-[68px] left-0 right-0 z-40 bg-brand-black/95 backdrop-blur-xl border-b border-brand-line/60 py-8 px-6 flex flex-col space-y-3 text-center text-xs font-semibold uppercase tracking-widest lg:hidden shadow-2xl"
           >
-            <a href="#manifesto" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Manifesto</a>
-            <a href="#duality" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Systems</a>
-            <a href="#ecosystem" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Ecosystem</a>
-            <a href="#products" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Products</a>
-            <a href="#shop" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Shop</a>
-            <a href="#bodyworks" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Bodyworks</a>
-            <a href="#exhalework" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">ExhaleWork</a>
-            <a href="#articles" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Articles</a>
-            <a href="#philosophy" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Philosophy</a>
-            <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="py-2 text-brand-soft hover:text-brand-gold transition">Contact</a>
+            <a href="#manifesto" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Manifesto</a>
+            <a href="#duality" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Systems</a>
+            <a href="#ecosystem" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Ecosystem</a>
+            <a href="#products" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Products</a>
+            <a href="#shop" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Shop</a>
+            <a href="#bodyworks" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Bodyworks</a>
+            <a href="#exhalework" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">ExhaleWork</a>
+            <a href="#articles" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Articles</a>
+            <a href="#philosophy" onClick={() => setMobileMenuOpen(false)} className="py-3 border-b border-brand-line/10 text-brand-soft hover:text-brand-gold transition duration-200">Philosophy</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)} className="py-3 text-brand-soft hover:text-brand-gold transition duration-200">Contact</a>
             
             <button
               onClick={() => { setMobileMenuOpen(false); toggleCms(); }}
-              className="mt-2 w-full py-2 bg-brand-gold/20 border border-brand-gold text-brand-gold rounded-full text-xs"
+              className="mt-4 w-full py-3 bg-brand-gold/15 border border-brand-gold text-brand-gold rounded-full text-xs font-bold tracking-wider hover:bg-brand-gold hover:text-brand-black transition duration-250 cursor-pointer"
             >
               ⚙️ CMS Dashboard
             </button>
@@ -519,7 +546,7 @@ export default function PublicWebsite({
               onClick={() => setCartOpen(false)}
               className="absolute inset-0 bg-black"
             />
-            <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
+            <div className="absolute inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
               <motion.div 
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
@@ -578,7 +605,14 @@ export default function PublicWebsite({
                                 <span className="text-[9px] text-brand-gold uppercase tracking-widest font-mono font-bold block">{item.product.category}</span>
                                 <h4 className="text-sm font-semibold text-white mt-1 truncate">{item.product.name}</h4>
                                 <p className="text-xs text-brand-gold font-bold mt-1 font-mono">
-                                  ${item.product.priceVal} USD
+                                  {item.product.salePriceVal !== undefined && item.product.salePriceVal !== null ? (
+                                    <>
+                                      <span className="line-through text-zinc-505 text-zinc-500 mr-2">${item.product.priceVal}</span>
+                                      <span>${item.product.salePriceVal} USD</span>
+                                    </>
+                                  ) : (
+                                    `$${item.product.priceVal} USD`
+                                  )}
                                 </p>
                                 <span className="text-[9px] text-zinc-500 block truncate">SKU: {item.product.sku}</span>
                               </div>
@@ -1032,7 +1066,7 @@ export default function PublicWebsite({
 
       {/* HERO SECTION */}
       {showHero && (
-      <section className="relative min-h-[60vh] flex items-center justify-center text-center px-6 lg:px-24 pt-16 pb-8 bg-radial-gradient">
+      <section className="relative min-h-[60vh] flex items-center justify-center text-center px-4 sm:px-6 lg:px-24 pt-24 xs:pt-28 sm:pt-32 pb-8 sm:pb-12 bg-radial-gradient">
         {/* Glow ambient circle background as requested in original style */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
           <div className="absolute top-[15%] left-[50%] -translate-x-1/2 w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] rounded-full bg-brand-gold/10 blur-[120px]" />
@@ -1049,7 +1083,7 @@ export default function PublicWebsite({
               {siteData.hero.brandKicker}
             </div>
             
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-[8px] font-display mb-2 uppercase leading-[1.05] text-white">
+            <h1 className="text-4xl xs:text-5xl md:text-7xl lg:text-8xl font-black tracking-[4px] xs:tracking-[8px] font-display mb-2 uppercase leading-[1.05] text-white">
               {siteData.hero.brandLogo}
             </h1>
 
@@ -1096,7 +1130,7 @@ export default function PublicWebsite({
 
       {/* MANIFESTO SECTION */}
       {showManifesto && (
-      <section id="manifesto" className="bg-brand-black py-12 px-6 lg:px-24 border-t border-brand-line/30 scroll-mt-12">
+      <section id="manifesto" className="bg-brand-black py-10 sm:py-12 px-4 sm:px-6 lg:px-24 border-t border-brand-line/30 scroll-mt-12">
         <div className="max-w-4xl mx-auto">
           <div className="kicker text-center text-[10px] uppercase tracking-[4px] text-brand-gold font-mono font-bold block mb-4">
             {siteData.manifesto.kicker}
@@ -1109,11 +1143,11 @@ export default function PublicWebsite({
             whileInView={{ opacity: 1, y: 0 }}
             initial={{ opacity: 0, y: 30 }}
             viewport={{ once: true }}
-            className="card bg-neutral-950 border border-brand-line/75 rounded-[24px] p-8 md:p-12 shadow-2xl relative overflow-hidden"
+            className="card bg-neutral-950 border border-brand-line/75 rounded-[24px] p-5 sm:p-8 md:p-12 shadow-2xl relative overflow-hidden"
           >
             <div className="absolute top-0 right-0 w-24 h-24 bg-brand-gold/5 blur-xl rounded-full" />
             
-            <div className="space-y-8">
+            <div className="space-y-6 sm:space-y-8">
               {/* Introduction terms */}
               <div className="space-y-4 text-center max-w-2xl mx-auto">
                 <p className="text-base md:text-lg font-bold tracking-tight text-white leading-relaxed font-display">
@@ -1131,7 +1165,7 @@ export default function PublicWebsite({
               {/* Duality section: Freedom From vs. Freedom To */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                 {/* Freedom From - Clinical Downregulation */}
-                <div className="bg-neutral-900/60 border border-neutral-800/80 p-6 rounded-2xl space-y-4">
+                <div className="bg-neutral-900/60 border border-neutral-800/80 p-5 sm:p-6 rounded-2xl space-y-4">
                   <span className="text-[10px] font-mono tracking-widest text-[#aa8612] font-black uppercase block border-b border-neutral-900 pb-2">
                     Dissolving Restrictions
                   </span>
@@ -1158,7 +1192,7 @@ export default function PublicWebsite({
                 </div>
 
                 {/* Freedom To - Performance Activation */}
-                <div className="bg-neutral-900/60 border border-neutral-800/80 p-6 rounded-2xl space-y-4 flex flex-col justify-between">
+                <div className="bg-neutral-900/60 border border-neutral-800/80 p-5 sm:p-6 rounded-2xl space-y-4 flex flex-col justify-between">
                   <div className="space-y-4">
                     <span className="text-[10px] font-mono tracking-widest text-brand-gold font-black uppercase block border-b border-neutral-900 pb-2">
                       Activating Human Potential
@@ -1208,7 +1242,7 @@ export default function PublicWebsite({
       <section id="duality" className="scroll-mt-12 border-t border-b border-brand-line/30">
         <div className="grid grid-cols-1 lg:grid-cols-2">
           {/* Black System */}
-          <div className="bg-gradient-to-br from-neutral-950 to-neutral-900 px-8 lg:px-20 py-14 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-brand-line/30 min-h-[400px]">
+          <div className="bg-gradient-to-br from-neutral-950 to-neutral-900 px-4 sm:px-8 lg:px-20 py-12 sm:py-14 flex flex-col justify-center border-b lg:border-b-0 lg:border-r border-brand-line/30 min-h-[300px] sm:min-h-[400px]">
             <div className="max-w-lg mx-auto space-y-6">
               <span className="text-[10px] tracking-[4px] font-mono text-brand-gold font-bold uppercase">{siteData.blackSystem.kicker}</span>
               <h2 className="text-3xl md:text-5xl font-black text-white uppercase font-display leading-[1.1] tracking-tight">
@@ -1239,7 +1273,7 @@ export default function PublicWebsite({
           </div>
 
           {/* White System */}
-          <div className="bg-gradient-to-br from-neutral-100 to-amber-50/70 text-zinc-900 px-8 lg:px-20 py-14 flex flex-col justify-center min-h-[400px]">
+          <div className="bg-gradient-to-br from-neutral-100 to-amber-50/70 text-zinc-900 px-4 sm:px-8 lg:px-20 py-12 sm:py-14 flex flex-col justify-center min-h-[300px] sm:min-h-[400px]">
             <div className="max-w-lg mx-auto space-y-6">
               <span className="text-[10px] tracking-[4px] font-mono text-[#aa8612] font-semibold uppercase">{siteData.whiteSystem.kicker}</span>
               <h2 className="text-3xl md:text-5xl font-black text-neutral-950 uppercase font-display leading-[1.1] tracking-tight">
@@ -1285,8 +1319,8 @@ export default function PublicWebsite({
 
       {/* ECOSYSTEM BENTO GRID */}
       {showEcosystem && (
-      <section id="ecosystem" className="bg-gradient-to-br from-[#0c0c0c] to-black py-12 px-6 lg:px-24 border-t border-b border-brand-line/30 scroll-mt-12">
-        <div className="max-w-7xl mx-auto space-y-8">
+      <section id="ecosystem" className="bg-gradient-to-br from-[#0c0c0c] to-black py-10 sm:py-12 px-4 sm:px-6 lg:px-24 border-t border-b border-brand-line/30 scroll-mt-12">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
           <div className="text-center">
             <span className="kicker text-[10px] uppercase tracking-[4px] text-brand-gold font-mono font-bold block mb-2">{siteData.ecosystem.kicker}</span>
             <h2 className="text-2xl md:text-4xl font-extrabold uppercase font-display text-white">
@@ -1321,69 +1355,85 @@ export default function PublicWebsite({
 
       {/* PRODUCT SYSTEM VIEW */}
       {showProducts && (
-      <section id="products" className="bg-gradient-to-b from-[#fff] to-[#f4efe3] text-zinc-900 py-12 px-6 lg:px-24 scroll-mt-12">
+      <section id="products" className="bg-gradient-to-b from-white to-[#f7f3ea] text-zinc-900 py-10 sm:py-14 px-4 sm:px-6 lg:px-24 scroll-mt-12">
         <div className="max-w-7xl mx-auto space-y-8">
+          {/* Section header */}
           <div className="text-center space-y-2">
-            <span className="kicker text-[10px] uppercase tracking-[4px] text-[#9c741d] font-mono font-black block">CulturX Product System</span>
+            <span className="text-[10px] uppercase tracking-[4px] text-[#9c741d] font-mono font-black block">CulturX Product System</span>
             <h2 className="text-3xl md:text-4xl font-extrabold text-neutral-950 uppercase font-display tracking-tight leading-none">
               Internal Order.<br />
               <span className="text-[#a5801e]">External Excellence.</span>
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {siteData.products.slice(0, 5).map((prod) => (
-              <div 
-                key={prod.id} 
-                className="bg-white rounded-3xl p-6 border border-[#9c741d]/30 hover:border-[#d4af37] shadow-xl flex flex-col justify-between transition-all"
+              <div
+                key={prod.id}
+                className="group bg-white rounded-2xl border border-[#9c741d]/20 hover:border-[#d4af37]/60 hover:shadow-lg transition-all duration-200 flex flex-col overflow-hidden"
               >
-                <div>
-                  <span className="text-[9.5px] font-bold font-mono tracking-wider text-[#9c741d] bg-[#fdfaf2] border border-[#9c741d]/20 px-3 py-1 rounded-full uppercase block w-fit mb-3">
+                {/* Image */}
+                <div className="relative aspect-square w-full overflow-hidden bg-[#fdfaf4]">
+                  {prod.imageUrl ? (
+                    <img
+                      src={prod.imageUrl}
+                      alt={prod.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[#c4a84a] text-3xl">🧬</div>
+                  )}
+                  {/* Category badge overlay */}
+                  <span className="absolute top-3 left-3 text-[9px] font-black font-mono tracking-wider text-[#7a5c10] bg-[#fdf8e8]/90 backdrop-blur-sm border border-[#c4a84a]/30 px-2.5 py-1 rounded-full uppercase">
                     {prod.category}
                   </span>
-                  
-                  {/* Product visualization based on CMS upload or fallback */}
-                  {prod.imageUrl && (
-                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden border border-[#9c741d]/10 bg-slate-50 mb-4 group shadow-xs">
-                      <img 
-                        src={prod.imageUrl} 
-                        alt={prod.name} 
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                      />
+                  {prod.isComingSoon && (
+                    <span className="absolute top-3 right-3 text-[9px] font-black font-mono tracking-wider text-amber-800 bg-amber-100/90 backdrop-blur-sm border border-amber-300/50 px-2.5 py-1 rounded-full uppercase">
+                      Soon
+                    </span>
+                  )}
+                </div>
+
+                {/* Body */}
+                <div className="flex flex-col flex-1 p-4 space-y-3">
+                  {/* Name + description */}
+                  <div>
+                    <h3 className="text-sm font-black font-display text-neutral-900 uppercase leading-tight tracking-wide">
+                      {prod.name}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-zinc-650 mt-1.5 leading-relaxed line-clamp-3">
+                      {prod.description}
+                    </p>
+                  </div>
+
+                  {/* Feature pills */}
+                  {prod.features && prod.features.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {prod.features.slice(0, 3).map((feat, i) => (
+                        <span key={i} className="text-[9px] font-mono text-zinc-500 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded-full">
+                          {feat}
+                        </span>
+                      ))}
                     </div>
                   )}
-                  
-                  <h3 className="text-lg font-black font-display text-neutral-950 uppercase mb-2">
-                    {prod.name}
-                  </h3>
-                  <p className="text-xs text-zinc-600 mb-4 font-sans leading-relaxed">
-                    {prod.description}
-                  </p>
-                  <ul className="text-xs text-zinc-700 space-y-2 border-t border-zinc-100 pt-4 mb-4">
-                    {prod.features.map((feat, fIdx) => (
-                      <li key={fIdx} className="flex items-start">
-                        <Check className="w-3.5 h-3.5 text-brand-gold shrink-0 mr-2 mt-0.5" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="border-t border-zinc-100 pt-4 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-zinc-400 font-mono tracking-widest block">IDENTIFIER</span>
-                    <span className="text-xs font-bold text-zinc-500 font-mono">{prod.sku}</span>
-                  </div>
-                  <div>
-                    {prod.isComingSoon ? (
-                      <span className="text-xs font-semibold text-[#aa8612] bg-yellow-100 px-4 py-2 rounded-full font-mono">
-                        Coming Soon
-                      </span>
-                    ) : (
-                      <span className="text-sm font-extrabold text-neutral-950 font-mono">
-                        ${prod.priceVal} USD
-                      </span>
-                    )}
+
+                  {/* Footer: price + SKU */}
+                  <div className="mt-auto pt-3 border-t border-zinc-100 flex items-center justify-between">
+                    <span className="text-[9px] text-zinc-400 font-mono">{prod.sku}</span>
+                    <div className="text-right">
+                      {prod.isComingSoon ? (
+                        <span className="text-[10px] text-amber-700 font-mono font-bold">Coming Soon</span>
+                      ) : prod.salePriceVal !== undefined && prod.salePriceVal !== null ? (
+                        <div>
+                          <span className="line-through text-[10px] text-zinc-400 mr-1">${prod.priceVal}</span>
+                          <span className="text-sm font-extrabold text-emerald-600 font-mono">${prod.salePriceVal}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-extrabold text-neutral-900 font-mono">${prod.priceVal}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1395,87 +1445,101 @@ export default function PublicWebsite({
 
       {/* INTERACTIVE STOREFRONT SHOP */}
       {showShop && (
-      <section id="shop" className="bg-[#050505] py-12 px-6 lg:px-24 border-t border-brand-line/30 scroll-mt-12">
+      <section id="shop" className="bg-[#050505] py-10 sm:py-14 px-4 sm:px-6 lg:px-24 border-t border-brand-line/30 scroll-mt-12">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="max-w-4xl">
-            <span className="kicker text-[10px] uppercase tracking-[4px] text-brand-gold font-mono font-bold block mb-2">Shop CulturX</span>
-            <h2 className="text-2xl md:text-4xl font-extrabold uppercase font-display text-white tracking-wide">
-              Operational From Launch.<br />
-              <span className="text-brand-gold">Built to Sell the System.</span>
-            </h2>
-            <p className="text-zinc-400 text-xs md:text-sm mt-3 leading-relaxed max-w-2xl">
-              This section is fully integrated. If a product is marked as ready for sale (i.e. updated in the CMS with pricing), visitors can click &quot;Configure Order&quot; to purchase dynamically. Keep items marked as &quot;Coming Soon&quot; or set prices to enable direct shopping.
+          {/* Section header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <span className="text-[10px] uppercase tracking-[4px] text-brand-gold font-mono font-bold block mb-2">Shop CulturX</span>
+              <h2 className="text-2xl md:text-4xl font-extrabold uppercase font-display text-white tracking-wide leading-none">
+                Operational From Launch.<br />
+                <span className="text-brand-gold">Built to Sell the System.</span>
+              </h2>
+            </div>
+            <p className="text-zinc-500 text-[11px] leading-relaxed max-w-xs md:text-right">
+              Products marked as ready ship now. Coming Soon items lock to preview.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+          {/* Card grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {siteData.products.map((prod) => (
-              <div 
-                key={prod.id} 
-                className="bg-neutral-950 border border-brand-line/50 hover:border-brand-gold/80 rounded-3xl p-6 flex flex-col justify-between transition-all duration-200"
+              <div
+                key={prod.id}
+                className="group bg-neutral-950 border border-neutral-800 hover:border-brand-gold/50 rounded-2xl flex flex-col overflow-hidden transition-all duration-200"
               >
-                <div className="space-y-4">
-                  <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">SKU: {prod.sku}</span>
-                    <span className="text-[10px] text-brand-gold font-bold font-mono bg-brand-gold/10 px-2 py-1 rounded-md border border-brand-line/20">{prod.category}</span>
-                  </div>
-                  
-                  {/* Product visualization based on CMS upload or fallback */}
-                  <div className="relative aspect-square w-full rounded-2xl overflow-hidden border border-neutral-900 bg-neutral-900/40 group">
-                    {prod.imageUrl ? (
-                      <img 
-                        src={prod.imageUrl} 
-                        alt={prod.name} 
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-neutral-900/60 text-zinc-600 font-mono text-[10px] uppercase">
-                        No Image Loaded
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <h3 className="text-base font-bold font-display text-white uppercase">{prod.name}</h3>
-                    <p className="text-xs text-zinc-400 mt-2 leading-relaxed h-14 overflow-hidden text-ellipsis">
-                      {prod.description}
-                    </p>
-                  </div>
-
-                  <div className="border-t border-neutral-900 pt-4 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] text-neutral-500 block uppercase font-mono">Costing Structure</span>
-                      <p className="text-sm font-bold text-brand-gold font-mono">
-                        {prod.isComingSoon ? 'Price TBC' : `$${prod.priceVal} USD`}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedProductSeo(prod)}
-                      className="text-[10px] text-brand-gold font-mono hover:underline uppercase flex items-center space-x-1 cursor-pointer"
-                    >
-                      <Info className="w-3 h-3 text-brand-gold" />
-                      <span>SEO Analytics</span>
-                    </button>
-                  </div>
+                {/* Image */}
+                <div className="relative aspect-square w-full overflow-hidden bg-neutral-900">
+                  {prod.imageUrl ? (
+                    <img
+                      src={prod.imageUrl}
+                      alt={prod.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-zinc-700 font-mono text-[10px] uppercase">No Image</div>
+                  )}
+                  {/* Badges */}
+                  <span className="absolute top-3 left-3 text-[9px] font-bold font-mono text-brand-gold bg-brand-gold/10 border border-brand-gold/20 backdrop-blur-sm px-2.5 py-1 rounded-full uppercase">
+                    {prod.category}
+                  </span>
+                  {prod.isComingSoon && (
+                    <span className="absolute top-3 right-3 text-[9px] font-bold font-mono text-zinc-400 bg-neutral-900/80 border border-neutral-700 backdrop-blur-sm px-2.5 py-1 rounded-full uppercase">
+                      Soon
+                    </span>
+                  )}
                 </div>
 
-                <div className="pt-6">
-                  {prod.isComingSoon ? (
-                    <button 
-                      disabled
-                      className="w-full py-3 bg-neutral-900 border border-brand-line/30 text-zinc-500 rounded-full text-xs font-bold uppercase tracking-wider cursor-not-allowed text-center"
+                {/* Body */}
+                <div className="flex flex-col flex-1 p-4 space-y-3">
+                  <div>
+                    <h3 className="text-sm font-bold font-display text-white uppercase leading-tight tracking-wide">{prod.name}</h3>
+                    <p className="text-xs sm:text-sm text-zinc-400 mt-1.5 leading-relaxed line-clamp-3">{prod.description}</p>
+                  </div>
+
+                  {/* Price + SKU row */}
+                  <div className="mt-auto pt-3 border-t border-neutral-800 flex items-center justify-between">
+                    <span className="text-[9px] text-zinc-600 font-mono">{prod.sku}</span>
+                    <div className="text-right">
+                      {prod.isComingSoon ? (
+                        <span className="text-[10px] text-zinc-500 font-mono">Price TBC</span>
+                      ) : prod.salePriceVal !== undefined && prod.salePriceVal !== null ? (
+                        <div>
+                          <span className="line-through text-[10px] text-zinc-600 mr-1">${prod.priceVal}</span>
+                          <span className="text-sm font-extrabold text-brand-gold font-mono">${prod.salePriceVal}</span>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-extrabold text-brand-gold font-mono">${prod.priceVal}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SEO link + CTA */}
+                  <div className="flex items-center gap-2">
+                    {prod.isComingSoon ? (
+                      <button
+                        disabled
+                        className="flex-1 py-2.5 bg-neutral-900 border border-neutral-800 text-zinc-600 rounded-xl text-xs font-bold uppercase tracking-wider cursor-not-allowed text-center"
+                      >
+                        Coming Soon
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => addToCart(prod)}
+                        className="flex-1 py-2.5 bg-brand-gold text-brand-black hover:bg-white rounded-xl text-xs font-black uppercase tracking-wider text-center transition cursor-pointer"
+                      >
+                        Add to Cart
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSelectedProductSeo(prod)}
+                      title="SEO Analytics"
+                      className="p-2.5 rounded-xl border border-neutral-800 hover:border-brand-gold/40 text-zinc-600 hover:text-brand-gold transition cursor-pointer"
                     >
-                      Coming Soon
+                      <Info className="w-3.5 h-3.5" />
                     </button>
-                  ) : (
-                    <button 
-                      onClick={() => addToCart(prod)}
-                      className="w-full py-3 bg-brand-gold text-brand-black hover:bg-white hover:text-brand-black rounded-full text-xs font-black uppercase tracking-wider text-center transition"
-                    >
-                      Configure Order
-                    </button>
-                  )}
+                  </div>
                 </div>
               </div>
             ))}
@@ -1486,8 +1550,8 @@ export default function PublicWebsite({
 
       {/* TREATMENT BODYWORKS & IN-ROOM RECOVERY */}
       {showBodyworks && (
-      <section id="bodyworks" className="bg-[#050505] py-12 px-6 lg:px-24 border-t border-neutral-900 scroll-mt-12">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-12 gap-12">
+      <section id="bodyworks" className="bg-[#050505] py-10 sm:py-12 px-4 sm:px-6 lg:px-24 border-t border-neutral-900 scroll-mt-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-12 gap-6 xl:gap-12">
           
           {/* Info Side */}
           <div className="xl:col-span-7 space-y-6">
@@ -1549,8 +1613,10 @@ export default function PublicWebsite({
                 >
                   <div className="space-y-2">
                     <h4 className="text-sm font-bold uppercase text-white font-display tracking-wider">{tx.name}</h4>
-                    <p className="text-[10px] text-zinc-500 font-mono font-bold uppercase">
-                      {tx.durationMin} MIN · <span className="text-brand-gold">${tx.costUSD} USD</span>
+                    <p className="text-[10px] text-zinc-500 font-mono font-bold uppercase flex items-center flex-wrap gap-x-1.5 gap-y-0.5">
+                      <span>{tx.durationMin} MIN</span>
+                      <span className="text-zinc-600 font-normal">·</span>
+                      <span className="text-brand-gold text-[13px] font-black tracking-wider">${tx.costUSD} USD</span>
                     </p>
                     <p className="text-[11px] text-zinc-400 leading-snug line-clamp-3">
                       {tx.description}
@@ -1700,7 +1766,7 @@ export default function PublicWebsite({
 
       {/* EXHALEWORK MINIMAL BRIEF */}
       {showExhaleWork && (
-      <section id="exhalework" className="bg-[#050505] py-16 px-6 lg:px-24 border-t border-b border-brand-line/35 text-center relative overflow-hidden scroll-mt-12">
+      <section id="exhalework" className="bg-[#050505] py-16 px-4 sm:px-6 lg:px-24 border-t border-b border-brand-line/35 text-center relative overflow-hidden scroll-mt-12">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70vw] h-[70vw] max-w-[500px] bg-brand-gold/5 rounded-full blur-[100px] pointer-events-none" />
         <div className="max-w-4xl mx-auto space-y-6 relative z-10">
           <span className="kicker text-[10px] uppercase tracking-[4px] text-brand-gold font-mono font-bold block">{siteData.exhaleWork.kicker}</span>
@@ -1723,7 +1789,7 @@ export default function PublicWebsite({
 
       {/* HOW IT WORKS / CONCIERGE CARDS */}
       {showConcierge && (
-      <section className="bg-gradient-to-b from-[#fff] to-[#f4efe3] text-zinc-900 py-12 px-6 lg:px-24">
+      <section className="bg-gradient-to-b from-[#fff] to-[#f4efe3] text-zinc-900 py-12 px-4 sm:px-6 lg:px-24">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <span className="kicker text-[10px] uppercase tracking-[4px] text-[#aa8612] font-mono font-black block">{siteData.concierge.kicker}</span>
@@ -1766,7 +1832,7 @@ export default function PublicWebsite({
 
       {/* PHILOSOPHY SECTIONS */}
       {showPhilosophy && (
-      <section id="philosophy" className="bg-[#050505] py-14 px-6 lg:px-24 border-t border-neutral-950 scroll-mt-12 overflow-hidden relative">
+      <section id="philosophy" className="bg-[#050505] py-14 px-4 sm:px-6 lg:px-24 border-t border-neutral-950 scroll-mt-12 overflow-hidden relative">
         <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-indigo-950/20 rounded-full blur-[120px] pointer-events-none" />
         
         <div className="max-w-7xl mx-auto space-y-16 relative z-10">
@@ -1849,7 +1915,7 @@ export default function PublicWebsite({
 
       {/* THE VAULT SECTION */}
       {showVault && (
-      <section id="vault" className="bg-black py-14 px-6 lg:px-24 border-t border-b border-brand-line/30 relative overflow-hidden">
+      <section id="vault" className="bg-black py-14 px-4 sm:px-6 lg:px-24 border-t border-b border-brand-line/30 relative overflow-hidden">
         {/* Glow grid background */}
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-brand-gold/5 to-transparent pointer-events-none" />
         <div className="absolute -bottom-48 left-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
@@ -1922,7 +1988,7 @@ export default function PublicWebsite({
 
       {/* MEDICAL ARTICLES & NEWS SYSTEM */}
       {showArticles && (
-      <section id="articles" className="bg-[#050505] py-16 px-6 lg:px-24 border-t border-b border-brand-line/40 scroll-mt-12 relative overflow-hidden">
+      <section id="articles" className="bg-[#050505] py-16 px-4 sm:px-6 lg:px-24 border-t border-b border-brand-line/40 scroll-mt-12 relative overflow-hidden">
         
         {/* Ambient background accent */}
         <div className="absolute top-1/4 right-0 w-80 h-80 bg-brand-gold/5 rounded-full blur-[140px] pointer-events-none" />
@@ -2130,43 +2196,50 @@ export default function PublicWebsite({
 
               {/* Rich Content formatted beautifully */}
               <div className="markdown-body text-brand-soft text-sm leading-relaxed space-y-6 border-t border-b border-brand-line/25 py-6 font-sans">
-                {selectedArticleToRead.content.split('\n\n').map((para, i) => {
-                  if (para.startsWith('## ')) {
-                    return <h2 key={i} className="text-xl font-bold uppercase tracking-wide text-brand-gold font-display mt-6 mb-2">{para.replace('## ', '')}</h2>;
-                  }
-                  if (para.startsWith('### ')) {
-                    return <h3 key={i} className="text-base font-bold uppercase tracking-tight text-white font-mono mt-4 mb-2">{para.replace('### ', '')}</h3>;
-                  }
-                  if (para.startsWith('- ') || para.startsWith('* ')) {
-                    return (
-                      <ul key={i} className="list-disc pl-6 space-y-1 text-zinc-300">
-                        {para.split('\n').map((li, idx) => (
-                          <li key={idx}>{li.replace(/^[\s-*]+/, '')}</li>
-                        ))}
-                      </ul>
-                    );
-                  }
-                  if (para.startsWith('1. ') || para.startsWith('2. ') || para.startsWith('3. ')) {
-                    return (
-                      <ol key={i} className="list-decimal pl-6 space-y-1 text-zinc-300">
-                        {para.split('\n').map((li, idx) => (
-                          <li key={idx}>{li.replace(/^\d+\.\s*/, '')}</li>
-                        ))}
-                      </ol>
-                    );
-                  }
-                  // Normal Paragraph
-                  // Bold processing
-                  const parts = para.split('**');
-                  if (parts.length > 1) {
-                    return (
-                      <p key={i}>
-                        {parts.map((p, idx) => idx % 2 === 1 ? <strong key={idx} className="text-brand-gold font-semibold">{p}</strong> : p)}
-                      </p>
-                    );
-                  }
-                  return <p key={i}>{para}</p>;
-                })}
+                {selectedArticleToRead.content.includes('<') && (selectedArticleToRead.content.includes('</') || selectedArticleToRead.content.includes('/>')) ? (
+                  <div 
+                    className="prose prose-invert max-w-none text-brand-soft prose-headings:text-white prose-headings:font-display prose-headings:uppercase prose-h2:text-brand-gold prose-h2:text-xl prose-h3:text-white prose-h3:font-mono prose-strong:text-brand-gold prose-a:text-brand-gold prose-a:underline hover:prose-a:text-white transition-all space-y-4"
+                    dangerouslySetInnerHTML={{ __html: selectedArticleToRead.content }}
+                  />
+                ) : (
+                  selectedArticleToRead.content.split('\n\n').map((para, i) => {
+                    if (para.startsWith('## ')) {
+                      return <h2 key={i} className="text-xl font-bold uppercase tracking-wide text-brand-gold font-display mt-6 mb-2">{para.replace('## ', '')}</h2>;
+                    }
+                    if (para.startsWith('### ')) {
+                      return <h3 key={i} className="text-base font-bold uppercase tracking-tight text-white font-mono mt-4 mb-2">{para.replace('### ', '')}</h3>;
+                    }
+                    if (para.startsWith('- ') || para.startsWith('* ')) {
+                      return (
+                        <ul key={i} className="list-disc pl-6 space-y-1 text-zinc-300">
+                          {para.split('\n').map((li, idx) => (
+                            <li key={idx}>{li.replace(/^[\s-*]+/, '')}</li>
+                          ))}
+                        </ul>
+                      );
+                    }
+                    if (para.startsWith('1. ') || para.startsWith('2. ') || para.startsWith('3. ')) {
+                      return (
+                        <ol key={i} className="list-decimal pl-6 space-y-1 text-zinc-300">
+                          {para.split('\n').map((li, idx) => (
+                            <li key={idx}>{li.replace(/^\d+\.\s*/, '')}</li>
+                          ))}
+                        </ol>
+                      );
+                    }
+                    // Normal Paragraph
+                    // Bold processing
+                    const parts = para.split('**');
+                    if (parts.length > 1) {
+                      return (
+                        <p key={i}>
+                          {parts.map((p, idx) => idx % 2 === 1 ? <strong key={idx} className="text-brand-gold font-semibold">{p}</strong> : p)}
+                        </p>
+                      );
+                    }
+                    return <p key={i}>{para}</p>;
+                  })
+                )}
               </div>
 
               {/* Citation & Melbourne local Clinical guidelines */}
@@ -2313,7 +2386,7 @@ export default function PublicWebsite({
   "offers": {
     "@type": "Offer",
     "priceCurrency": "USD",
-    "price": "${selectedProductSeo.priceVal}",
+    "price": "${selectedProductSeo.salePriceVal !== undefined && selectedProductSeo.salePriceVal !== null ? selectedProductSeo.salePriceVal : selectedProductSeo.priceVal}",
     "priceValidUntil": "2027-12-31",
     "availability": "https://schema.org/InStock",
     "url": "https://culturx.com.au/#shop"
@@ -2339,7 +2412,7 @@ export default function PublicWebsite({
 
       {/* CONTACT & SUBMISSION FORM */}
       {showContact && (
-      <section id="contact" className="bg-gradient-to-b from-[#fff] to-[#f4efe3] text-zinc-900 py-12 px-6 lg:px-24 scroll-mt-12">
+      <section id="contact" className="bg-gradient-to-b from-[#fff] to-[#f4efe3] text-zinc-900 py-12 px-4 sm:px-6 lg:px-24 scroll-mt-12">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="text-center space-y-2">
             <span className="kicker text-[10px] uppercase tracking-[4px] text-[#90701d] font-mono font-black block">{siteData.contact.kicker}</span>

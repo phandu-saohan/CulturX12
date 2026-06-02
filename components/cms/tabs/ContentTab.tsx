@@ -167,9 +167,12 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
             <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Editorial Sub-claim banner</label>
             <input type="text" value={editedHero.subline} onChange={e => setEditedHero({ ...editedHero, subline: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
           </div>
-          <div className="md:col-span-2">
-            <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Hero detailed body introduction</label>
-            <textarea rows={3} value={editedHero.description} onChange={e => setEditedHero({ ...editedHero, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+          <div className="md:col-span-2 space-y-1">
+            <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+              <label>Hero detailed body introduction</label>
+              <span className="text-slate-400 font-mono text-[9px]">{editedHero.description.length} chars</span>
+            </div>
+            <textarea rows={5} value={editedHero.description} onChange={e => setEditedHero({ ...editedHero, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs transition duration-150" />
           </div>
         </div>
       </div>
@@ -192,9 +195,12 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
               <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Heading Statement</label>
               <input type="text" value={editedBlackSystem.heading} onChange={e => setEditedBlackSystem({ ...editedBlackSystem, heading: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
-            <div>
-              <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Description claim paragraph</label>
-              <textarea rows={3} value={editedBlackSystem.description} onChange={e => setEditedBlackSystem({ ...editedBlackSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                <label>Description claim paragraph</label>
+                <span className="text-slate-400 font-mono text-[9px]">{editedBlackSystem.description.length} chars</span>
+              </div>
+              <textarea rows={4} value={editedBlackSystem.description} onChange={e => setEditedBlackSystem({ ...editedBlackSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
             </div>
             <div>
               <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Pills (comma-separated list)</label>
@@ -212,9 +218,12 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
               <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Heading Statement</label>
               <input type="text" value={editedWhiteSystem.heading} onChange={e => setEditedWhiteSystem({ ...editedWhiteSystem, heading: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
-            <div>
-              <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Description claim paragraph</label>
-              <textarea rows={3} value={editedWhiteSystem.description} onChange={e => setEditedWhiteSystem({ ...editedWhiteSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            <div className="space-y-1">
+              <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+                <label>Description claim paragraph</label>
+                <span className="text-slate-400 font-mono text-[9px]">{editedWhiteSystem.description.length} chars</span>
+              </div>
+              <textarea rows={4} value={editedWhiteSystem.description} onChange={e => setEditedWhiteSystem({ ...editedWhiteSystem, description: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
             </div>
             <div>
               <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Pills (comma-separated list)</label>
@@ -240,9 +249,14 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
             <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Manifesto Headline text</label>
             <input type="text" value={editedManifesto.heading} onChange={e => setEditedManifesto({ ...editedManifesto, heading: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
           </div>
-          <div className="md:col-span-2">
-            <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Duality Claims & Terms (One term per line)</label>
-            <textarea rows={5} value={editedManifesto.terms.join('\n')} onChange={e => setEditedManifesto({ ...editedManifesto, terms: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+          <div className="md:col-span-2 space-y-1">
+            <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+              <label>Duality Claims & Terms (One term per line)</label>
+              <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[9px] font-mono px-2 py-0.5 rounded-md font-semibold">
+                {editedManifesto.terms.length} terms loaded
+              </span>
+            </div>
+            <textarea rows={8} value={editedManifesto.terms.join('\n')} onChange={e => setEditedManifesto({ ...editedManifesto, terms: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
           </div>
         </div>
       </div>
@@ -288,13 +302,16 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
                     setEditedEcosystem({ ...editedEcosystem, items: newItems });
                   }} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
                 </div>
-                <div>
-                  <label className="text-slate-400 block mb-0.5 font-bold uppercase tracking-wider text-[9px]">Description Paragraph</label>
-                  <textarea rows={2} value={item.description} onChange={e => {
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center text-[9px] uppercase font-bold tracking-wider text-slate-450">
+                    <label>Description Paragraph</label>
+                    <span className="font-mono text-[8px]">{item.description.length} chars</span>
+                  </div>
+                  <textarea rows={3} value={item.description} onChange={e => {
                     const newItems = [...editedEcosystem.items];
                     newItems[idx] = { ...item, description: e.target.value };
                     setEditedEcosystem({ ...editedEcosystem, items: newItems });
-                  }} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                  }} className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2 text-xs text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed" />
                 </div>
               </div>
             ))}
@@ -322,9 +339,12 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
             <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Support Subline</label>
             <input type="text" value={editedBodyworks.subline} onChange={e => setEditedBodyworks({ ...editedBodyworks, subline: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-450" />
           </div>
-          <div className="md:col-span-2">
-            <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Key explanatory paragraph</label>
-            <textarea rows={3} value={editedBodyworks.paragraph} onChange={e => setEditedBodyworks({ ...editedBodyworks, paragraph: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-450" />
+          <div className="md:col-span-2 space-y-1">
+            <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+              <label>Key explanatory paragraph</label>
+              <span className="text-slate-400 font-mono text-[9px]">{editedBodyworks.paragraph.length} chars</span>
+            </div>
+            <textarea rows={5} value={editedBodyworks.paragraph} onChange={e => setEditedBodyworks({ ...editedBodyworks, paragraph: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-450 leading-relaxed shadow-2xs" />
           </div>
           <div>
             <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Required state call (e.g. Not indulgence. Required recovery.)</label>
@@ -334,9 +354,14 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
             <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Clinical Right Box Card Title</label>
             <input type="text" value={editedBodyworks.cardTitle} onChange={e => setEditedBodyworks({ ...editedBodyworks, cardTitle: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-400" />
           </div>
-          <div className="md:col-span-2">
-            <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Clinical Card explanations list (One statement per line)</label>
-            <textarea rows={4} value={editedBodyworks.cardTexts.join('\n')} onChange={e => setEditedBodyworks({ ...editedBodyworks, cardTexts: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-400" />
+          <div className="md:col-span-2 space-y-1">
+            <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+              <label>Clinical Card explanations list (One statement per line)</label>
+              <span className="bg-indigo-50 border border-indigo-200 text-indigo-700 text-[9px] font-mono px-2 py-0.5 rounded-md font-semibold">
+                {editedBodyworks.cardTexts.length} statements loaded
+              </span>
+            </div>
+            <textarea rows={6} value={editedBodyworks.cardTexts.join('\n')} onChange={e => setEditedBodyworks({ ...editedBodyworks, cardTexts: e.target.value.split('\n').filter(line => line.trim() !== '') })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-850 font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 leading-relaxed shadow-2xs" />
           </div>
         </div>
       </div>
@@ -357,9 +382,12 @@ export default function ContentTab({ siteData, onSaveSiteData, showToast }: Cont
             <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Headline Accent Claim</label>
             <input type="text" value={editedExhale.heading} onChange={e => setEditedExhale({ ...editedExhale, heading: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
           </div>
-          <div>
-            <label className="text-slate-500 block mb-1 font-semibold uppercase tracking-wider text-[10px]">Central explanations text</label>
-            <textarea rows={2} value={editedExhale.explanation} onChange={e => setEditedExhale({ ...editedExhale, explanation: e.target.value })} className="w-full bg-white border border-slate-200 rounded-xl p-2 text-slate-800 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+          <div className="space-y-1">
+            <div className="flex justify-between items-center text-[10px] uppercase font-bold tracking-wider text-slate-500">
+              <label>Central explanations text</label>
+              <span className="text-slate-400 font-mono text-[9px]">{editedExhale.explanation.length} chars</span>
+            </div>
+            <textarea rows={4} value={editedExhale.explanation} onChange={e => setEditedExhale({ ...editedExhale, explanation: e.target.value })} className="w-full bg-white border border-slate-200 rounded-2xl p-3 text-xs text-slate-855 font-sans focus:outline-none focus:ring-1 focus:ring-indigo-500 leading-relaxed shadow-2xs" />
           </div>
         </div>
       </div>

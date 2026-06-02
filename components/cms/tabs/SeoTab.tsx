@@ -129,7 +129,7 @@ export default function SeoTab({ siteData, seoChecklist, toggleSeoCheck, seoPage
                         </div>
                         <textarea
                           id={`seo-desc-${pageKey}`}
-                          rows={2}
+                          rows={4}
                           value={pageData.description}
                           onChange={(e) => handleUpdatePageSeo(pageKey, 'description', e.target.value)}
                           placeholder="Formulate description summarizing the core directory target..."

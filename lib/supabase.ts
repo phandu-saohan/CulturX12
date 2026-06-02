@@ -6,6 +6,37 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 's
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
+ * Deep merges target (defaults) and source (fetched data) to ensure no fields are missing.
+ */
+function deepMerge(target: any, source: any): any {
+  if (target === null || target === undefined) return source;
+  if (source === null || source === undefined) return target;
+
+  if (typeof target !== 'object' || typeof source !== 'object') {
+    return source;
+  }
+
+  if (Array.isArray(target) || Array.isArray(source)) {
+    return source;
+  }
+
+  const result = { ...target };
+  for (const key of Object.keys(source)) {
+    const sourceVal = source[key];
+    if (sourceVal !== undefined) {
+      if (sourceVal === null) {
+        result[key] = null;
+      } else if (typeof sourceVal === 'object' && target[key] !== undefined && target[key] !== null) {
+        result[key] = deepMerge(target[key], sourceVal);
+      } else {
+        result[key] = sourceVal;
+      }
+    }
+  }
+  return result;
+}
+
+/**
  * Fetches state from Supabase table 'culturx_store'.
  * If the table does not exist or fails, falls back to localStorage or default value.
  */
@@ -34,7 +65,7 @@ export async function fetchStateFromSupabase<T>(key: string, defaultValue: T): P
       } catch (e) {
         console.error(e);
       }
-      return data.value as T;
+      return deepMerge(defaultValue, data.value) as T;
     }
 
     return getLocalFallback(key, defaultValue);
@@ -91,7 +122,8 @@ function getLocalFallback<T>(key: string, defaultValue: T): T {
   try {
     const cached = localStorage.getItem(`culturx_cache_${key}`) || localStorage.getItem(getLegacyKey(key));
     if (cached) {
-      return JSON.parse(cached);
+      const parsed = JSON.parse(cached);
+      return deepMerge(defaultValue, parsed) as T;
     }
   } catch (e) {
     console.error(e);
