@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, X } from 'lucide-react';
 import { MedicalArticle } from '@/lib/initialData';
 import RichTextEditor from '../RichTextEditor';
@@ -29,6 +29,8 @@ export default function EditorialTab({
   setArticleForm,
   handleArticleFormSubmit
 }: EditorialTabProps) {
+  const [viewingArticle, setViewingArticle] = useState<MedicalArticle | null>(null);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 space-y-3 sm:space-y-0">
@@ -85,7 +87,7 @@ export default function EditorialTab({
                 <td className="py-4 px-4">
                   <div className="flex flex-wrap gap-1 max-w-[200px]">
                     {art.seoKeywords ? art.seoKeywords.map((kw, i) => (
-                      <span key={i} className="bg-slate-105 text-slate-600 text-[9px] px-1.5 py-0.5 rounded border border-slate-200 uppercase font-mono tracking-tight">
+                      <span key={i} className="bg-slate-105 text-slate-650 text-[9px] px-1.5 py-0.5 rounded border border-slate-200 uppercase font-mono tracking-tight">
                         #{kw}
                       </span>
                     )) : <span className="text-slate-400">-</span>}
@@ -93,16 +95,22 @@ export default function EditorialTab({
                 </td>
                 <td className="py-4 px-4 text-right space-x-1.5 font-mono">
                   <button
+                    onClick={() => setViewingArticle(art)}
+                    className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10.5px] uppercase font-bold transition cursor-pointer font-sans"
+                  >
+                    View
+                  </button>
+                  <button
                     onClick={() => handleOpenArticleModal(art)}
-                    className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10.5px] uppercase font-bold transition cursor-pointer"
+                    className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10.5px] uppercase font-bold transition cursor-pointer font-sans"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => {
-                      if (confirm(`Permanently decommission publication: ${art.title}?`)) {
+                      if (confirm(`Are you sure you want to permanently delete publication: ${art.title}?`)) {
                         onDeleteArticle(art.id);
-                        showToast(`Decommissioned article "${art.title}" successfully`);
+                        showToast(`Pruned article "${art.title}" from index`);
                       }
                     }}
                     className="p-1 px-2 text-slate-400 hover:text-red-500 transition cursor-pointer inline-flex items-center align-middle"
@@ -115,6 +123,59 @@ export default function EditorialTab({
           </tbody>
         </table>
       </div>
+
+      {/* VIEW MEDICAL ARTICLE DETAILS MODAL */}
+      {viewingArticle && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setViewingArticle(null)} />
+          <div className="relative bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-3xl w-full text-slate-800 shadow-2xl space-y-6">
+            <button onClick={() => setViewingArticle(null)} className="absolute top-6 right-6 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full text-slate-400 hover:text-slate-700 transition cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+
+            <div>
+              <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-750 border border-indigo-200 uppercase tracking-widest">{viewingArticle.category}</span>
+              <h3 className="text-xl font-bold uppercase text-slate-900 mt-2 leading-tight font-display">{viewingArticle.title}</h3>
+              
+              <div className="flex items-center gap-4 text-[10px] text-slate-500 font-mono mt-3 border-b border-slate-100 pb-3">
+                <span>By <strong>{viewingArticle.author}</strong></span>
+                <span>•</span>
+                <span>{viewingArticle.publishDate}</span>
+                <span>•</span>
+                <span>⏱️ {viewingArticle.readTime}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#a5801e] font-mono block">Excerpt / Summary:</span>
+              <p className="text-xs text-slate-600 bg-slate-50 border border-slate-100 p-3.5 rounded-xl italic leading-relaxed">{viewingArticle.excerpt}</p>
+            </div>
+
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-2 scrollbar-thin">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#a5801e] font-mono block mb-1">Article Body Content:</span>
+              <div 
+                className="text-xs text-slate-750 leading-relaxed space-y-3 prose max-w-none font-sans"
+                dangerouslySetInnerHTML={{ __html: viewingArticle.content }}
+              />
+            </div>
+
+            {viewingArticle.seoKeywords && viewingArticle.seoKeywords.length > 0 && (
+              <div className="border-t border-slate-100 pt-4 flex flex-wrap gap-1.5 items-center">
+                <span className="text-[9px] font-mono text-slate-400 uppercase font-bold mr-1">Keywords:</span>
+                {viewingArticle.seoKeywords.map((kw, i) => (
+                  <span key={i} className="bg-slate-100 text-slate-600 text-[9px] px-2 py-0.5 rounded border border-slate-200 uppercase font-mono">#{kw}</span>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button onClick={() => setViewingArticle(null)} className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase rounded-xl tracking-wider transition cursor-pointer">
+                Close Article
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL WINDOW FOR ARTICLE ADD / EDIT */}
       {articleModalOpen && (

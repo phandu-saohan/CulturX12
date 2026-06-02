@@ -511,9 +511,9 @@ export default function CmsDashboard({
     ];
 
     return (
-      <div className="flex flex-col h-full bg-slate-900 text-white">
+      <div className="flex flex-col h-full bg-[#0c101d] text-white">
         {/* BRAND HEADER */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
+        <div className="p-6 border-b border-slate-800/40 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-indigo-650 rounded-lg flex items-center justify-center font-bold text-white shadow-md shadow-indigo-500/20 shrink-0">
               <Settings className="w-4.5 h-4.5 animate-spin-slow" />
@@ -552,8 +552,8 @@ export default function CmsDashboard({
                   }}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-mono font-bold uppercase transition flex items-center justify-between cursor-pointer ${
                     isActive 
-                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/20' 
-                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-[#583bf4] text-white shadow-sm shadow-[#583bf4]/20' 
+                      : 'text-slate-400 hover:bg-[#1c2237] hover:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
@@ -561,17 +561,17 @@ export default function CmsDashboard({
                     <span>{tab.label}</span>
                   </div>
                    {tab.id === 'bookings' && activeBookingsCount > 0 && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${isActive ? 'bg-black/35 text-indigo-455' : 'bg-indigo-500/20 text-indigo-300'}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-mono font-bold ${isActive ? 'bg-black/35 text-white' : 'bg-[#1c2242] text-[#5c6df7]'}`}>
                       {activeBookingsCount}
                     </span>
                   )}
                   {tab.id === 'inbox' && unreadEnquiriesCount > 0 && (
-                    <span className="text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-md font-mono font-bold animate-pulse">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-mono font-bold animate-pulse ${isActive ? 'bg-black/35 text-white' : 'bg-[#381a1c] text-[#eb5757]'}`}>
                       {unreadEnquiriesCount}
                     </span>
                   )}
                   {tab.id === 'orders' && activeOrdersCount > 0 && (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono font-bold ${isActive ? 'bg-black/35 text-indigo-400' : 'bg-amber-500/20 text-amber-300 animate-pulse'}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-md font-mono font-bold animate-pulse ${isActive ? 'bg-black/35 text-white' : 'bg-[#2d2216] text-[#e5a93c]'}`}>
                       {activeOrdersCount}
                     </span>
                   )}
@@ -620,14 +620,14 @@ export default function CmsDashboard({
             onClick={() => setIsMobileSidebarOpen(false)}
           />
           {/* Drawer content */}
-          <div className="relative flex flex-col w-64 max-w-xs bg-slate-900 h-full text-white shadow-2xl transition-transform duration-300">
+          <div className="relative flex flex-col w-64 max-w-xs bg-[#0c101d] h-full text-white shadow-2xl transition-transform duration-300">
             {renderSidebar(true)}
           </div>
         </div>
       )}
 
       {/* DESKTOP SIDEBAR */}
-      <aside className="hidden lg:flex flex-col w-64 bg-slate-900 border-r border-slate-800 text-white shrink-0">
+      <aside className="hidden lg:flex flex-col w-64 bg-[#0c101d] border-r border-slate-800/40 text-white shrink-0">
         {renderSidebar(false)}
       </aside>
 

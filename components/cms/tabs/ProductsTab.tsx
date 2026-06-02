@@ -1,5 +1,4 @@
-'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { Plus, Trash2, X, Upload } from 'lucide-react';
 import { CulturXData, Product } from '@/lib/initialData';
 
@@ -40,6 +39,8 @@ export default function ProductsTab({
   handleImageFileChange,
   onViewProductSeo
 }: ProductsTabProps) {
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 space-y-3 sm:space-y-0">
@@ -105,6 +106,12 @@ export default function ProductsTab({
                 </td>
                 <td className="py-4 px-4 text-right space-x-1.5 font-sans">
                   <button
+                    onClick={() => setViewingProduct(prod)}
+                    className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10.5px] uppercase font-bold transition cursor-pointer"
+                  >
+                    View
+                  </button>
+                  <button
                     onClick={() => onViewProductSeo && onViewProductSeo(prod)}
                     className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-[10.5px] uppercase font-bold transition cursor-pointer"
                   >
@@ -133,6 +140,68 @@ export default function ProductsTab({
           </tbody>
         </table>
       </div>
+
+      {/* VIEW PRODUCT DETAILS MODAL */}
+      {viewingProduct && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setViewingProduct(null)} />
+          <div className="relative bg-white border border-slate-200 rounded-3xl p-6 md:p-8 max-w-2xl w-full text-slate-800 shadow-2xl space-y-6">
+            <button onClick={() => setViewingProduct(null)} className="absolute top-6 right-6 p-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full text-slate-400 hover:text-slate-700 transition cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+            
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Product Image */}
+              <div className="w-full md:w-1/3 aspect-square bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-center overflow-hidden shrink-0">
+                <img src={viewingProduct.imageUrl || 'https://picsum.photos/seed/kombucha/600/600'} alt={viewingProduct.name} className="w-full h-full object-cover" />
+              </div>
+              
+              {/* Product Details */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-750 border border-indigo-200 uppercase tracking-widest">{viewingProduct.category}</span>
+                  <h3 className="text-lg font-bold uppercase text-slate-900 mt-2 font-display">{viewingProduct.name}</h3>
+                  <p className="text-[11px] text-slate-500 font-mono mt-0.5">SKU: {viewingProduct.sku}</p>
+                </div>
+                
+                <div className="border-t border-b border-slate-100 py-3 flex justify-between items-center">
+                  <span className="text-xs text-slate-500 font-medium">Valuation Price:</span>
+                  <span className="text-sm font-bold text-indigo-700 font-mono">
+                    {viewingProduct.salePriceVal !== undefined && viewingProduct.salePriceVal !== null ? (
+                      <span>
+                        <span className="line-through text-slate-400 text-xs mr-1.5">${viewingProduct.priceVal}</span>
+                        <span className="text-emerald-600">${viewingProduct.salePriceVal} USD</span>
+                      </span>
+                    ) : (
+                      `$${viewingProduct.priceVal} USD`
+                    )}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#a5801e] font-mono block">Product Features:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingProduct.features && viewingProduct.features.map((feat, i) => (
+                      <span key={i} className="bg-slate-50 text-slate-700 text-[10px] px-2 py-0.5 border border-slate-200 rounded-md font-medium">✓ {feat}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2 border-t border-slate-100 pt-4">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#a5801e] font-mono block">Description & Narrative:</span>
+              <p className="text-xs text-slate-650 leading-relaxed bg-slate-50 border border-slate-200/60 p-4 rounded-2xl whitespace-pre-line">{viewingProduct.description}</p>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button onClick={() => setViewingProduct(null)} className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase rounded-xl tracking-wider transition cursor-pointer">
+                Close Preview
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL WINDOW FOR PRODUCT ADD / EDIT */}
       {productModalOpen && (
